@@ -1,0 +1,875 @@
+### FreeMASTER communication driver
+
+menuconfig MCUX_COMPONENT_middleware.fmstr
+    bool "FreeMASTER"
+    help
+        FreeMASTER communication driver code,
+        enabling communication between FreeMASTER
+        or FreeMASTER Lite tools and MCU application.
+
+    if MCUX_COMPONENT_middleware.fmstr
+
+### Platform
+
+        choice
+            prompt "Platform"
+            default MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+
+            # Enable FreeMASTER driver generic 32bit specific code
+            config MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                bool "Generic 32bit little-endian"
+                help
+                    FreeMASTER driver code for generic 32bit platforms,
+                    supports Serial, NET, CAN, USB and BDM/JTAG physical interface.
+
+            # Enable FreeMASTER driver DSC specific code
+            config MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                bool "DSC"
+                help
+                    FreeMASTER driver code for DSC platforms,
+                    supports Serial, CAN, USB and BDM/JTAG physical interface.
+
+            # Enable FreeMASTER driver generic S32 specific code
+            config MCUX_COMPONENT_middleware.fmstr.platform_s32
+                bool "S32"
+                help
+                    FreeMASTER driver code for generic S32 platforms.
+
+            # Enable FreeMASTER driver Power Architecture specific code
+            config MCUX_COMPONENT_middleware.fmstr.platform_pa32
+                bool "Power Architecture 32bit"
+                help
+                    FreeMASTER driver code for Power Architecture 32bit platforms.
+
+            # Enable FreeMASTER driver S12Z specific code
+            config MCUX_COMPONENT_middleware.fmstr.platform_s12z
+                bool "S12Z"
+                help
+                    FreeMASTER driver code for S12Z platforms.
+        endchoice
+
+### Generate configuration
+
+        config MCUX_PRJSEG_middleware.fmstr.generated_config
+            bool "Generate configuration"
+            select FMSTR_GENERATED_CONFIGURATION
+            default y
+            help
+                Generate the FreeMASTER driver configuration header,
+                otherwise user needs to provide its own freemaster_cfg.h.
+
+        # Generate configuration header file
+        if MCUX_PRJSEG_middleware.fmstr.generated_config
+
+            menu "Configuration header (freemaster_cfg.h)"
+
+                config FMSTR_GENERATED_CONFIGURATION
+                    bool
+                    default y
+                    help
+                        Used generated FreeMASTER driver configuration header.
+                        No prefix in generated macro
+
+### Disable FreeMASTER
+
+                config FMSTR_DISABLE
+                    bool "Disable FreeMASTER"
+                    default n
+                    help
+                        Disable all FreeMASTER functionalities
+                        No prefix in generated macro
+
+                if !FMSTR_DISABLE
+
+### Platform macro
+
+                    config FMSTR_PLATFORM_CORTEX_M
+                        bool
+                        default y
+                        depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                        help
+                            No prefix in generated macro
+
+                    config FMSTR_PLATFORM_56F800E
+                        bool
+                        default y
+                        depends on MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                        help
+                            No prefix in generated macro
+
+                    config FMSTR_PLATFORM_S32
+                        bool
+                        default y
+                        depends on MCUX_COMPONENT_middleware.fmstr.platform_s32
+                        help
+                            No prefix in generated macro
+
+                    config FMSTR_PLATFORM_PA32
+                        bool
+                        default y
+                        depends on MCUX_COMPONENT_middleware.fmstr.platform_pa32
+                        help
+                            No prefix in generated macro
+
+                    config FMSTR_PLATFORM_S12Z
+                        bool
+                        default y
+                        depends on MCUX_COMPONENT_middleware.fmstr.platform_s12z
+                        help
+                            No prefix in generated macro
+
+### Communication mode
+
+                    choice
+                        prompt "Communication mode"
+                        default FMSTR_POLL_DRIVEN
+
+                        config FMSTR_LONG_INTR
+                            bool "Long ISR"
+                            help
+                                Complete message processing in interrupt.
+                                No prefix in generated macro
+
+                        config FMSTR_SHORT_INTR
+                            bool "Short ISR"
+                            help
+                                Queuing done in interrupt.
+                                No prefix in generated macro
+
+                        config FMSTR_POLL_DRIVEN
+                            bool "Polling"
+                            help
+                                No interrupt needed, polling only.
+                                No prefix in generated macro
+                    endchoice
+
+### Communication interface
+
+                    choice
+                        prompt "Communication interface"
+                        default FMSTR_SERIAL
+
+                        config FMSTR_SERIAL
+                            bool "SERIAL"
+                            depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le || MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                            help
+                                Serial transport protocol.
+
+                        config FMSTR_CAN
+                            bool "CAN"
+                            depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le || MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                            help
+                                CAN transport protocol.
+
+                        config FMSTR_PDBDM
+                            bool "PDBDM"
+                            depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                            help
+                                Packet Driven BDM.
+
+                        config FMSTR_NET
+                            bool "NET"
+                            depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                            help
+                                Network transport protocol.
+                    endchoice
+
+                    config FMSTR_TRANSPORT
+                        string
+                        default "FMSTR_SERIAL" if FMSTR_SERIAL
+                        default "FMSTR_CAN" if FMSTR_CAN
+                        default "FMSTR_PDBDM" if FMSTR_PDBDM
+                        default "FMSTR_NET" if FMSTR_NET
+                        help
+                            No prefix in generated macro
+
+### Serial driver
+
+                    if FMSTR_SERIAL
+
+                        choice
+                            prompt "Serial driver"
+                            default FMSTR_SERIAL_MCUX_UART
+
+                            config FMSTR_SERIAL_MCUX_UART
+                                bool "UART"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for UART peripheral.
+
+                            config FMSTR_SERIAL_MCUX_LPUART
+                                bool "LPUART"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for LPUART peripheral.
+
+                            config FMSTR_SERIAL_MCUX_USART
+                                bool "USART"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for USART peripheral.
+
+                            config FMSTR_SERIAL_MCUX_MINIUSART
+                                bool "MINIUSART"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for MINIUSART peripheral.
+
+                            config FMSTR_SERIAL_MCUX_USB
+                                bool "USB"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le || MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                                help
+                                    Driver for USB peripheral with CDC class.
+
+                            config FMSTR_SERIAL_MCUX_QSCI
+                                bool "QSCI"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                                help
+                                    Driver for DSC QSCI peripheral.
+
+                            config FMSTR_SERIAL_56F800E_EONCE
+                                bool "EONCE"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                                help
+                                    56F800E-specific driver for JTAG EOnCE communication.
+
+                            config FMSTR_USE_SERIAL_CUSTOM
+                                bool "Custom"
+                                help
+                                    Use custom serial peripheral driver.
+
+                            config FMSTR_CUSTOM_SERIAL_DRV
+                                string  "Serial driver"
+                                depends on FMSTR_USE_SERIAL_CUSTOM
+                                help
+                                    Specify custom serial peripheral driver.
+                                    No prefix in generated macro
+                        endchoice
+
+                        config FMSTR_SERIAL_DRV
+                            string
+                            default "FMSTR_SERIAL_MCUX_UART" if FMSTR_SERIAL_MCUX_UART
+                            default "FMSTR_SERIAL_MCUX_LPUART" if FMSTR_SERIAL_MCUX_LPUART
+                            default "FMSTR_SERIAL_MCUX_USART" if FMSTR_SERIAL_MCUX_USART
+                            default "FMSTR_SERIAL_MCUX_MINIUSART" if FMSTR_SERIAL_MCUX_MINIUSART
+                            default "FMSTR_SERIAL_MCUX_USB" if FMSTR_SERIAL_MCUX_USB
+                            default "FMSTR_SERIAL_MCUX_QSCI" if FMSTR_SERIAL_MCUX_QSCI
+                            default "FMSTR_SERIAL_56F800E_EONCE" if FMSTR_SERIAL_56F800E_EONCE
+                            default "FMSTR_CUSTOM_SERIAL_DRV" if FMSTR_USE_SERIAL_CUSTOM
+                            help
+                                No prefix in generated macro
+
+                        config FMSTR_USE_SERIAL_BASE_ADDRESS
+                            bool "Serial base address"
+                            default n
+                            help
+                                Use specified serial driver base address.
+
+                        config FMSTR_SERIAL_BASE
+                            string  "Address"
+                            depends on FMSTR_USE_SERIAL_BASE_ADDRESS
+                            help
+                                Specify serial driver base address or leave undefined for runtime setting.
+                                No prefix in generated macro
+
+                    endif
+
+### CAN driver
+
+                    if FMSTR_CAN
+
+                        choice
+                            prompt "CAN driver"
+                            default FMSTR_CAN_MCUX_FLEXCAN
+
+                            config FMSTR_CAN_MCUX_FLEXCAN
+                                bool "FlexCAN"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for FlexCAN peripheral.
+
+                            config FMSTR_CAN_MCUX_MCAN
+                                bool "MCAN"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for MCAN peripheral.
+
+                            config FMSTR_CAN_MCUX_MSCAN
+                                bool "msCAN"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                                help
+                                    Driver for msCAN peripheral.
+
+                            config FMSTR_CAN_MCUX_DSCFLEXCAN
+                                bool "DSC FlexCAN"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                                help
+                                    Driver for DSC FlexCAN peripheral.
+
+                            config FMSTR_CAN_MCUX_DSCMSCAN
+                                bool "DSC msCAN"
+                                depends on MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                                help
+                                    Driver for DSC msCAN peripheral.
+
+                            config FMSTR_USE_CAN_CUSTOM
+                                bool "Custom"
+                                help
+                                    Use custom CAN peripheral driver.
+
+                            config FMSTR_CUSTOM_CAN_DRV
+                                string  "CAN driver"
+                                depends on FMSTR_USE_CAN_CUSTOM
+                                help
+                                    Specify custom CAN peripheral driver.
+                                    No prefix in generated macro
+                        endchoice
+
+                        config FMSTR_CAN_DRV
+                            string
+                            default "FMSTR_CAN_MCUX_FLEXCAN" if FMSTR_CAN_MCUX_FLEXCAN
+                            default "FMSTR_CAN_MCUX_MCAN" if FMSTR_CAN_MCUX_MCAN
+                            default "FMSTR_CAN_MCUX_MSCAN" if FMSTR_CAN_MCUX_MSCAN
+                            default "FMSTR_CAN_MCUX_DSCFLEXCAN" if FMSTR_CAN_MCUX_DSCFLEXCAN
+                            default "FMSTR_CAN_MCUX_DSCMSCAN" if FMSTR_CAN_MCUX_DSCMSCAN
+                            default "FMSTR_CUSTOM_CAN_DRV" if FMSTR_USE_CAN_CUSTOM
+                            help
+                                No prefix in generated macro
+
+                        config FMSTR_USE_CAB_BASE_ADDRESS
+                            bool "CAN base address"
+                            default n
+                            help
+                                Use specified CAN driver base address.
+
+                        config FMSTR_CAN_BASE
+                            string  "Address"
+                            depends on FMSTR_USE_CAB_BASE_ADDRESS
+                            help
+                                Specify CAN driver base address or leave undefined for runtime setting.
+                                No prefix in generated macro
+
+### FlexCAN configuration
+
+                        config FMSTR_FLEXCAN_CONFIGURATION
+                            bool "FlexCAN configuration"
+                            default y
+                            depends on FMSTR_CAN_MCUX_FLEXCAN || FMSTR_CAN_MCUX_DSCFLEXCAN
+                            help
+                                FlexCAN-specific, communication message buffers.
+
+                        config FMSTR_FLEXCAN_TXMB
+                            int "TX message buffer"
+                            default 0
+                            depends on FMSTR_FLEXCAN_CONFIGURATION
+                            help
+                                No prefix in generated macro
+
+                        config FMSTR_FLEXCAN_RXMB
+                            int "RX message buffer"
+                            default 1
+                            depends on FMSTR_FLEXCAN_CONFIGURATION
+                            help
+                                No prefix in generated macro
+
+### mCAN configuration
+
+                        config FMSTR_MCAN_CONFIGURATION
+                            bool "mCAN configuration"
+                            default y
+                            depends on FMSTR_CAN_MCUX_MCAN
+                            help
+                                MCAN  needs to know offset of the mcan shared memory,
+                                offsets of the buffers into shared memory, transmit/receive MB numbers.
+
+                        config FMSTR_USE_MCAN_TXMB_OFFSET
+                            bool "Transmit buffers offset"
+                            default n
+                            depends on FMSTR_MCAN_CONFIGURATION
+                            help
+                                MCAN transmit buffers offset in shared memory must be defined.
+
+                        config FMSTR_MCAN_TXMB_OFFSET
+                            int "Offset"
+                            depends on FMSTR_USE_MCAN_TXMB_OFFSET
+                            help
+                                MCAN transmit buffers offset in shared memory must be defined.
+                                No prefix in generated macro
+
+                        config FMSTR_USE_MCAN_RXMB_OFFSET
+                            bool "Receive buffers offset"
+                            default n
+                            depends on FMSTR_MCAN_CONFIGURATION
+                            help
+                                MCAN receive buffers offset in shared memory must be defined.
+
+                        config FMSTR_MCAN_RXMB_OFFSET
+                            int "Offset"
+                            depends on FMSTR_USE_MCAN_RXMB_OFFSET
+                            help
+                                MCAN receive buffers offset in shared memory must be defined.
+                                No prefix in generated macro
+
+                        config FMSTR_USE_MCAN_SHAREDMEMORY_OFFSET
+                            bool "Shared memory offset"
+                            default n
+                            depends on FMSTR_MCAN_CONFIGURATION
+                            help
+                                MCAN shared memory address must be defined.
+
+                        config FMSTR_MCAN_SHAREDMEMORY_OFFSET
+                            hex "Offset"
+                            depends on FMSTR_USE_MCAN_SHAREDMEMORY_OFFSET
+                            help
+                                MCAN shared memory address must be defined.
+                                No prefix in generated macro
+
+                    endif
+
+### NET driver
+
+                    if FMSTR_NET
+
+                        choice
+                            prompt "NET driver"
+                            default FMSTR_NET_LWIP_TCP
+
+                            config FMSTR_NET_LWIP_TCP
+                                bool "lwIP TCP"
+                                help
+                                    TCP using lwIP stack.
+
+                            config FMSTR_NET_LWIP_UDP
+                                bool "lwIP UDP"
+                                help
+                                    UDP using lwIP stack.
+
+                            config FMSTR_NET_SEGGER_RTT
+                                bool "SEGGER RTT"
+                                help
+                                    SEGGER RTT using J-Link debugger.
+                        endchoice
+
+                        config FMSTR_NET_DRV
+                            string
+                            default "FMSTR_NET_LWIP_TCP" if FMSTR_NET_LWIP_TCP
+                            default "FMSTR_NET_LWIP_UDP" if FMSTR_NET_LWIP_UDP
+                            default "FMSTR_NET_SEGGER_RTT" if FMSTR_NET_SEGGER_RTT
+                            help
+                                No prefix in generated macro
+
+### Network configuration
+
+                        config FMSTR_NET_CONFIGURATION
+                            bool "Network configuration"
+                            default y
+                            depends on FMSTR_NET_LWIP_TCP || FMSTR_NET_LWIP_UDP
+                            help
+                                Network-specific communication options.
+
+                        config FMSTR_NET_PORT
+                            int "Server port number"
+                            default 3344
+                            depends on FMSTR_NET_CONFIGURATION
+                            help
+                                Server port number (used for both TCP or UDP).
+                                No prefix in generated macro
+
+                        config FMSTR_NET_BLOCKING_TIMEOUT
+                            int "Blocking timeout (ms)"
+                            default 250
+                            depends on FMSTR_NET_CONFIGURATION
+                            help
+                                Blocking timeout (ms) of network calls used in FMSTR_Poll.
+                                No prefix in generated macro
+
+                        config FMSTR_SESSION_COUNT
+                            int "Session count"
+                            default 1
+                            depends on FMSTR_NET_CONFIGURATION
+                            help
+                                Allowed session count.
+                                No prefix in generated macro
+
+                        config FMSTR_NET_AUTODISCOVERY
+                            bool "Automatic board discovery"
+                            default y
+                            depends on FMSTR_NET_CONFIGURATION
+                            help
+                                Enable automatic board discovery via UDP protocol.
+                                No prefix in generated macro
+
+### SEGGER RTT configuration
+
+                        config FMSTR_NET_SEGGER_RTT_CONFIGURATION
+                            bool "SEGGER RTT configuration"
+                            default y
+                            depends on FMSTR_NET_SEGGER_RTT
+                            help
+                                SEGGER RTT specific options.
+
+                        config FMSTR_NET_SEGGER_RTT_BUFFER_INDEX
+                            int "RTT buffer index"
+                            default 0
+                            depends on FMSTR_NET_SEGGER_RTT_CONFIGURATION
+                            help
+                                SEGGER RTT buffer index.
+                                No prefix in generated macro
+
+                        config FMSTR_NET_SEGGER_RTT_SECTION
+                            bool "RTT memory section"
+                            default n
+                            depends on FMSTR_NET_SEGGER_RTT_CONFIGURATION
+                            help
+                                Enable to specify memory section for RTT control block.
+
+                        config SEGGER_RTT_SECTION
+                            string "Section"
+                            depends on FMSTR_NET_SEGGER_RTT_SECTION
+                            help
+                                Specify memory section for RTT control block.
+                                No prefix in generated macro
+
+                    endif
+
+### PDBDM communication buffer
+
+                    config FMSTR_PDBDM_USER_BUFFER
+                        bool "User defined PDBDM buffer"
+                        default n
+                        depends on FMSTR_PDBDM
+                        help
+                            User defined PDBDM buffer (e.g. special section placement needed).
+                            No prefix in generated macro
+
+### Enable TSA tables
+
+                    config FMSTR_USE_TSA
+                        bool "Enable TSA tables"
+                        default y
+                        help
+                            Target-side address translation (TSA).
+                            No prefix in generated macro
+
+                    config FMSTR_USE_TSA_INROM
+                        bool "TSA tables in ROM"
+                        default y
+                        depends on FMSTR_USE_TSA
+                        help
+                            TSA tables declared as const (put to ROM).
+                            No prefix in generated macro
+
+                    config FMSTR_USE_TSA_SAFETY
+                        bool "TSA memory protection"
+                        default y
+                        depends on FMSTR_USE_TSA
+                        help
+                            Enable/Disable TSA memory protection.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_TSA_DYNAMIC
+                        bool "TSA entries modification in runtime"
+                        default y
+                        depends on FMSTR_USE_TSA
+                        help
+                            Enable/Disable TSA entries to be added also in runtime.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_TSA_CDECL
+                        bool "TSA calling convention"
+                        default n
+                        depends on FMSTR_USE_TSA
+                        help
+                            Use specific calling convention for TSA tables.
+
+                    config FMSTR_TSA_CDECL
+                        string "Convention"
+                        depends on FMSTR_USE_TSA_CDECL
+                        help
+                            Specify calling convention for TSA tables.
+                            No prefix in generated macro
+
+### Use App.Commands
+
+                    config FMSTR_USE_APPCMD
+                        bool "Use App.Commands"
+                        default y
+                        help
+                            Enable/disable App.Commands support.
+                            No prefix in generated macro
+
+                    config FMSTR_APPCMD_BUFF_SIZE
+                        int "Command data buffer size"
+                        default 32
+                        depends on FMSTR_USE_APPCMD
+                        help
+                            App.command data buffer size.
+                            No prefix in generated macro
+
+                    config FMSTR_MAX_APPCMD_CALLS
+                        int "Command callbacks"
+                        default 4
+                        depends on FMSTR_USE_APPCMD
+                        help
+                            How many app.cmd callbacks? (0=disable).
+                            No prefix in generated macro
+
+### Memory access
+
+                    config FMSTR_MEMORY_ACCESS
+                        bool "Memory access"
+                        default y
+                        help
+                            Enable/Disable read/write memory commands.
+
+                    config FMSTR_USE_READMEM
+                        bool "Read memory"
+                        default y
+                        depends on FMSTR_MEMORY_ACCESS
+                        help
+                            Enable read memory commands.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_WRITEMEM
+                        bool "Write memory"
+                        default y
+                        depends on FMSTR_MEMORY_ACCESS
+                        help
+                            Enable write memory commands.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_WRITEMEMMASK
+                        bool "Write memory bits"
+                        default y
+                        depends on FMSTR_MEMORY_ACCESS
+                        help
+                            Enable write memory bits commands.
+                            No prefix in generated macro
+
+### Use oscilloscope
+
+                    config FMSTR_OSCILLOSCOPE
+                        bool "Use oscilloscope"
+                        default y
+                        help
+                            Oscilloscope support.
+
+                    config FMSTR_USE_SCOPE
+                        int "Number of oscilloscopes"
+                        default 1
+                        depends on FMSTR_OSCILLOSCOPE
+                        help
+                            Number of supported oscilloscopes.
+                            No prefix in generated macro
+
+                    config FMSTR_MAX_SCOPE_VARS
+                        int "Variables per one oscilloscope"
+                        default 8
+                        depends on FMSTR_OSCILLOSCOPE
+                        help
+                            Maximum number of scope variables per one oscilloscope.
+                            No prefix in generated macro
+
+### Use recorder
+
+                    config FMSTR_RECORDER
+                        bool "Use recorder"
+                        default y
+                        help
+                            Recorder support.
+
+                    config FMSTR_USE_RECORDER
+                        int "Number of recorders"
+                        default 1
+                        depends on FMSTR_RECORDER
+                        help
+                            Number of supported recorders.
+                            No prefix in generated macro
+
+                    config FMSTR_REC_BUFF_SIZE
+                        int "Recorder buffer size"
+                        default 1024
+                        depends on FMSTR_RECORDER
+                        help
+                            Built-in buffer size of recorder.
+                            Set to 0 to use runtime settings.
+                            No prefix in generated macro
+
+                    config FMSTR_REC_TIMEBASE
+                        string "Recorder time base"
+                        default "FMSTR_REC_BASE_MILLISEC(0)"
+                        depends on FMSTR_RECORDER
+                        help
+                            Recorder time base (0 = "unknown"),
+                            specifies how often the recorder is called in the user app.
+                            No prefix in generated macro
+
+                    config FMSTR_REC_FLOAT_TRIG
+                        bool "Floating point triggering"
+                        default y if MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+                        default n if MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+                        depends on FMSTR_RECORDER
+                        help
+                            Enable/disable floating point triggering.
+                            No prefix in generated macro
+
+### Use pipes
+
+                    config FMSTR_PIPES
+                        bool "Use pipes"
+                        default y
+                        help
+                            Pipes support.
+
+                    config FMSTR_USE_PIPES
+                        int "Number of pipes"
+                        default 1
+                        depends on FMSTR_PIPES
+                        help
+                            Specify number of supported pipes.
+                            No prefix in generated macro
+
+### Use access levels password
+
+                    config FMSTR_USE_PASSWORDS
+                        bool "Use access levels password"
+                        default n
+                        help
+                            Define password for access levels to protect them.
+                            AVOID SHORT PASSWORDS in production version.
+                            Passwords should be at least 20 characters long to prevent dictionary attacks.
+
+                    config FMSTR_USE_RESTRICTED_ACCESS_R_PASSWORD
+                        bool "Read-only password"
+                        default n
+                        depends on FMSTR_USE_PASSWORDS
+                        help
+                            Read-only access level password.
+                            Let disabled when no password is required.
+
+                    config FMSTR_RESTRICTED_ACCESS_R_PASSWORD
+                        string "Password"
+                        default "password-here"
+                        depends on FMSTR_USE_RESTRICTED_ACCESS_R_PASSWORD
+                        help
+                            Read-only access level password.
+                            Let undefined when no password is required.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_RESTRICTED_ACCESS_RW_PASSWORD
+                        bool "Write password"
+                        depends on FMSTR_USE_PASSWORDS
+                        help
+                            Write access level password.
+                            Let disabled to set the same as for read-only access level.
+
+                    config FMSTR_RESTRICTED_ACCESS_RW_PASSWORD
+                        string "Password"
+                        default "password-here"
+                        depends on FMSTR_USE_RESTRICTED_ACCESS_RW_PASSWORD
+                        help
+                            Write access level password.
+                            Let undefined to set the same as for read-only access level.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_RESTRICTED_ACCESS_RWF_PASSWORD
+                        bool "Flash password"
+                        depends on FMSTR_USE_PASSWORDS
+                        help
+                            Flash access level password.
+                            Let disabled to set the same as for write access level.
+
+                    config FMSTR_RESTRICTED_ACCESS_RWF_PASSWORD
+                        string "Password"
+                        default "password-here"
+                        depends on FMSTR_USE_RESTRICTED_ACCESS_RWF_PASSWORD
+                        help
+                            Flash access level password.
+                            Let undefined to set the same as for write access level.
+                            No prefix in generated macro
+
+                    config FMSTR_USE_HASHED_PASSWORDS
+                        bool "Password as SHA1 hash"
+                        default n
+                        depends on FMSTR_USE_PASSWORDS
+                        help
+                            Storing cleartext passwords in Flash memory is not safe, consider storing their SHA1 hash instead.
+                            Even with this option, the hash must be generated from reasonably complex password to prevent dictionary attack.
+                            When non-zero, all passwords are specified as a pointer to 20-byte SHA1 hash of password text.
+                            No prefix in generated macro
+
+### Misc
+
+                    menu "Misc"
+
+                        config FMSTR_APPLICATION_STR
+                            string "Application name"
+                            default "\"Not defined\""
+                            help
+                                Application name used for e.g. auto discovery with NET communication interface.
+                                No prefix in generated macro
+
+                        config FMSTR_COMM_BUFFER_SIZE
+                            int "Communication buffer size"
+                            default 0
+                            help
+                                Input/output communication buffer size.
+                                Set to 0 for "automatic".
+                                No prefix in generated macro
+
+                        config FMSTR_COMM_RQUEUE_SIZE
+                            int "Receive FIFO queue size"
+                            default 0
+                            depends on FMSTR_SHORT_INTR
+                            help
+                                Receive FIFO queue size.
+                                Set to 0 for "default".
+                                No prefix in generated macro
+
+                    endmenu
+
+### Debugging
+
+                    menu "Debugging"
+
+                        config FMSTR_DEBUG_LEVEL
+                            int "Debugging print level"
+                            default 0
+                            help
+                                Debugging print level (0=none, 1=errors, 2=normal, 3=verbose).
+                                No prefix in generated macro
+
+                        config FMSTR_DEBUG_PRINTF
+                            string "Print function"
+                            default "PRINT"
+                            depends on FMSTR_DEBUG_LEVEL > 0
+                            help
+                                Define print function.
+                                No prefix in generated macro
+
+                        config FMSTR_PRINT_INCLUDE
+                            string "Include file"
+                            default "\"fsl_debug_console.h\""
+                            depends on FMSTR_DEBUG_LEVEL > 0
+                            help
+                                Specify header file (where print function is defined) to be included.
+                                No prefix in generated macro
+
+                        config FMSTR_DEBUG_TX
+                            bool "Transmit debug data"
+                            default n
+                            help
+                                Debug-TX mode is a special mode used to test or debug the data transmitter. Our driver
+                                will be sending test frames periodically until a first valid command is received from the
+                                PC Host. You can hook a logic analyzer to transmission pins to determine port and baudrate.
+                                Or you can connect the FreeMASTER tool and run the connection wizard to listen for the dummy frames.
+                                No prefix in generated macro
+                    endmenu
+
+                endif
+
+            endmenu
+
+        endif
+
+    endif
