@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, 2024 NXP
+ * Copyright 2024 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -12,17 +12,17 @@
  * license terms, then you may not retain, install, activate or otherwise
  * use the software.
  *
- * FreeMASTER Communication Driver - S32K3 UART low-level driver
+ * FreeMASTER Communication Driver - S32 LINFLEXD low-level driver
  */
 
-#ifndef __FREEMASTER_S32K3XX_LPUART_H
-#define __FREEMASTER_S32K3XX_LPUART_H
+#ifndef __FREEMASTER_S32_LINFLEXD_H
+#define __FREEMASTER_S32_LINFLEXD_H
 
 /******************************************************************************
 * Required header files include check
 ******************************************************************************/
 #ifndef __FREEMASTER_H
-#error Please include the freemaster.h master header file before the freemaster_s32k3xx_lpuart.h
+#error Please include the freemaster.h master header file before the freemaster_s32_linflexd.h
 #endif
 
 /******************************************************************************
@@ -32,7 +32,7 @@
 #ifdef __cplusplus
   extern "C" {
 #endif
-
+      
 /******************************************************************************
 * Types definition
 ******************************************************************************/
@@ -46,10 +46,15 @@
 ******************************************************************************/
 
 void FMSTR_SerialSetBaseAddress(FMSTR_ADDR base);
+
+#ifdef USING_OS_AUTOSAROS
+ISR(FMSTR_SerialIsr);
+#else
 void FMSTR_SerialIsr(void);
+#endif /* USING_OS_AUTOSAROS */
 
 #ifdef __cplusplus
   }
 #endif
 
-#endif /* __FREEMASTER_S32K3XX_LPUART_H */
+#endif /* __FREEMASTER_S32_LINFLEXD_H */
