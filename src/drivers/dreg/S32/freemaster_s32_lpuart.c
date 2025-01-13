@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, 2022, 2024 NXP
+ * Copyright 2024 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -18,11 +18,11 @@
 #include "freemaster_private.h"
 
 /* Compile this code only if the SERIAL driver is selected in freemaster_cfg.h. */
-#if defined(FMSTR_SERIAL_DRV) && (FMSTR_MK_IDSTR(FMSTR_SERIAL_DRV) == FMSTR_SERIAL_S32K144_LPUART_ID)
+#if defined(FMSTR_SERIAL_DRV) && (FMSTR_MK_IDSTR(FMSTR_SERIAL_DRV) == FMSTR_SERIAL_S32_LPUART_ID)
 #if !(FMSTR_DISABLE)
 
 #include "freemaster_serial.h"
-#include "freemaster_s32k144_lpuart.h"
+#include "freemaster_s32_lpuart.h"
 
 /***********************************
 *  local variables
@@ -40,38 +40,38 @@
 ***********************************/
 
 /* Interface function - Initialization of SCI driver adapter */
-static FMSTR_BOOL _FMSTR_S32K144_Init(void);
-static void _FMSTR_S32K144_EnableTransmit(FMSTR_BOOL enable);
-static void _FMSTR_S32K144_EnableReceive(FMSTR_BOOL enable);
-static void _FMSTR_S32K144_EnableTransmitInterrupt(FMSTR_BOOL enable);
-static void _FMSTR_S32K144_EnableTransmitCompleteInterrupt(FMSTR_BOOL enable);
-static void _FMSTR_S32K144_EnableReceiveInterrupt(FMSTR_BOOL enable);
-static FMSTR_BOOL _FMSTR_S32K144_IsTransmitRegEmpty(void);
-static FMSTR_BOOL _FMSTR_S32K144_IsReceiveRegFull(void);
-static FMSTR_BOOL _FMSTR_S32K144_IsTransmitterActive(void);
-static void _FMSTR_S32K144_PutChar(FMSTR_BCHR ch);
-static FMSTR_BCHR _FMSTR_S32K144_GetChar(void);
-static void _FMSTR_S32K144_Flush(void);
+static FMSTR_BOOL _FMSTR_S32_Init(void);
+static void _FMSTR_S32_EnableTransmit(FMSTR_BOOL enable);
+static void _FMSTR_S32_EnableReceive(FMSTR_BOOL enable);
+static void _FMSTR_S32_EnableTransmitInterrupt(FMSTR_BOOL enable);
+static void _FMSTR_S32_EnableTransmitCompleteInterrupt(FMSTR_BOOL enable);
+static void _FMSTR_S32_EnableReceiveInterrupt(FMSTR_BOOL enable);
+static FMSTR_BOOL _FMSTR_S32_IsTransmitRegEmpty(void);
+static FMSTR_BOOL _FMSTR_S32_IsReceiveRegFull(void);
+static FMSTR_BOOL _FMSTR_S32_IsTransmitterActive(void);
+static void _FMSTR_S32_PutChar(FMSTR_BCHR ch);
+static FMSTR_BCHR _FMSTR_S32_GetChar(void);
+static void _FMSTR_S32_Flush(void);
 
 /***********************************
 *  global variables
 ***********************************/
 /* Interface of this SCI driver */
 
-const FMSTR_SERIAL_DRV_INTF FMSTR_SERIAL_S32K144_LPUART =
+const FMSTR_SERIAL_DRV_INTF FMSTR_SERIAL_S32_LPUART =
 {
-    .Init                       = _FMSTR_S32K144_Init,
-    .EnableTransmit             = _FMSTR_S32K144_EnableTransmit,
-    .EnableReceive              = _FMSTR_S32K144_EnableReceive,
-    .EnableTransmitInterrupt    = _FMSTR_S32K144_EnableTransmitInterrupt,
-    .EnableTransmitCompleteInterrupt= _FMSTR_S32K144_EnableTransmitCompleteInterrupt,
-    .EnableReceiveInterrupt     = _FMSTR_S32K144_EnableReceiveInterrupt,
-    .IsTransmitRegEmpty         = _FMSTR_S32K144_IsTransmitRegEmpty,
-    .IsReceiveRegFull           = _FMSTR_S32K144_IsReceiveRegFull,
-    .IsTransmitterActive        = _FMSTR_S32K144_IsTransmitterActive,
-    .PutChar                    = _FMSTR_S32K144_PutChar,
-    .GetChar                    = _FMSTR_S32K144_GetChar,
-    .Flush                      = _FMSTR_S32K144_Flush,
+    .Init                            = _FMSTR_S32_Init,
+    .EnableTransmit                  = _FMSTR_S32_EnableTransmit,
+    .EnableReceive                   = _FMSTR_S32_EnableReceive,
+    .EnableTransmitInterrupt         = _FMSTR_S32_EnableTransmitInterrupt,
+    .EnableTransmitCompleteInterrupt = _FMSTR_S32_EnableTransmitCompleteInterrupt,
+    .EnableReceiveInterrupt          = _FMSTR_S32_EnableReceiveInterrupt,
+    .IsTransmitRegEmpty              = _FMSTR_S32_IsTransmitRegEmpty,
+    .IsReceiveRegFull                = _FMSTR_S32_IsReceiveRegFull,
+    .IsTransmitterActive             = _FMSTR_S32_IsTransmitterActive,
+    .PutChar                         = _FMSTR_S32_PutChar,
+    .GetChar                         = _FMSTR_S32_GetChar,
+    .Flush                           = _FMSTR_S32_Flush,
 };
 
 /****************************************************************************************
@@ -111,7 +111,7 @@ const FMSTR_SERIAL_DRV_INTF FMSTR_SERIAL_S32K144_LPUART =
 *
 ******************************************************************************/
 
-static FMSTR_BOOL _FMSTR_S32K144_Init(void)
+static FMSTR_BOOL _FMSTR_S32_Init(void)
 {
 #if FMSTR_SERIAL_SINGLEWIRE
     #error Internal single wire mode is not supported.
@@ -132,7 +132,7 @@ static FMSTR_BOOL _FMSTR_S32K144_Init(void)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_EnableTransmit(FMSTR_BOOL enable)
+static void _FMSTR_S32_EnableTransmit(FMSTR_BOOL enable)
 {
     if(enable)
     {
@@ -152,7 +152,7 @@ static void _FMSTR_S32K144_EnableTransmit(FMSTR_BOOL enable)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_EnableReceive(FMSTR_BOOL enable)
+static void _FMSTR_S32_EnableReceive(FMSTR_BOOL enable)
 {
     if(enable)
     {
@@ -172,7 +172,7 @@ static void _FMSTR_S32K144_EnableReceive(FMSTR_BOOL enable)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_EnableTransmitInterrupt(FMSTR_BOOL enable)
+static void _FMSTR_S32_EnableTransmitInterrupt(FMSTR_BOOL enable)
 {
     if(enable)
     {
@@ -192,7 +192,7 @@ static void _FMSTR_S32K144_EnableTransmitInterrupt(FMSTR_BOOL enable)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_EnableTransmitCompleteInterrupt(FMSTR_BOOL enable)
+static void _FMSTR_S32_EnableTransmitCompleteInterrupt(FMSTR_BOOL enable)
 {
     if(enable)
     {
@@ -212,7 +212,7 @@ static void _FMSTR_S32K144_EnableTransmitCompleteInterrupt(FMSTR_BOOL enable)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_EnableReceiveInterrupt(FMSTR_BOOL enable)
+static void _FMSTR_S32_EnableReceiveInterrupt(FMSTR_BOOL enable)
 {
     if(enable)
     {
@@ -232,7 +232,7 @@ static void _FMSTR_S32K144_EnableReceiveInterrupt(FMSTR_BOOL enable)
 *
 ******************************************************************************/
 
-static FMSTR_BOOL _FMSTR_S32K144_IsTransmitRegEmpty(void)
+static FMSTR_BOOL _FMSTR_S32_IsTransmitRegEmpty(void)
 {
     return (FMSTR_BOOL) FMSTR_TSTBIT(fmstr_LPUARTBaseAddr, FMSTR_LPUART_STAT_OFFSET, FMSTR_LPUART_STAT_TDRE);
 }
@@ -243,7 +243,7 @@ static FMSTR_BOOL _FMSTR_S32K144_IsTransmitRegEmpty(void)
 *
 ******************************************************************************/
 
-static FMSTR_BOOL _FMSTR_S32K144_IsReceiveRegFull(void)
+static FMSTR_BOOL _FMSTR_S32_IsReceiveRegFull(void)
 {
     /* Clear overrun bit if set for the receiver to continue normal operation. */
     if(FMSTR_TSTBIT(fmstr_LPUARTBaseAddr, FMSTR_LPUART_STAT_OFFSET, FMSTR_LPUART_STAT_OR))
@@ -260,7 +260,7 @@ static FMSTR_BOOL _FMSTR_S32K144_IsReceiveRegFull(void)
 *
 ******************************************************************************/
 
-static FMSTR_BOOL _FMSTR_S32K144_IsTransmitterActive(void)
+static FMSTR_BOOL _FMSTR_S32_IsTransmitterActive(void)
 {
     /* 0 - Transmission in progress, 1 - No transmission in progress */
     return (!(FMSTR_TSTBIT(fmstr_LPUARTBaseAddr, FMSTR_LPUART_STAT_OFFSET, FMSTR_LPUART_STAT_TC)));
@@ -272,7 +272,7 @@ static FMSTR_BOOL _FMSTR_S32K144_IsTransmitterActive(void)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_PutChar(FMSTR_BCHR  ch)
+static void _FMSTR_S32_PutChar(FMSTR_BCHR  ch)
 {
     FMSTR_SETREG(fmstr_LPUARTBaseAddr, FMSTR_LPUART_DATA_OFFSET , ch);
 }
@@ -282,7 +282,7 @@ static void _FMSTR_S32K144_PutChar(FMSTR_BCHR  ch)
 * @brief    The function gets the received char
 *
 ******************************************************************************/
-static FMSTR_BCHR _FMSTR_S32K144_GetChar(void)
+static FMSTR_BCHR _FMSTR_S32_GetChar(void)
 {
     FMSTR_BCHR c=0;
     c = FMSTR_GETREG(fmstr_LPUARTBaseAddr, FMSTR_LPUART_DATA_OFFSET);
@@ -295,7 +295,7 @@ static FMSTR_BCHR _FMSTR_S32K144_GetChar(void)
 *
 ******************************************************************************/
 
-static void _FMSTR_S32K144_Flush(void)
+static void _FMSTR_S32_Flush(void)
 {
 }
 
@@ -337,4 +337,4 @@ void FMSTR_SerialIsr()
 }
 
 #endif /* !(FMSTR_DISABLE) */
-#endif /* defined(FMSTR_SERIAL_DRV) && (FMSTR_MK_IDSTR(FMSTR_SERIAL_DRV) == FMSTR_SERIAL_S32K144_LPUART_ID) */
+#endif /* defined(FMSTR_SERIAL_DRV) && (FMSTR_MK_IDSTR(FMSTR_SERIAL_DRV) == FMSTR_SERIAL_S32_LPUART_ID) */

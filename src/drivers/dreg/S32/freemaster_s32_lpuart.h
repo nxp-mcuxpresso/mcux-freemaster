@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, 2024 NXP
+ * Copyright 2024 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -12,17 +12,17 @@
  * license terms, then you may not retain, install, activate or otherwise
  * use the software.
  *
- * FreeMASTER Communication Driver - S32G2 UART low-level driver
+ * FreeMASTER Communication Driver - S32 LPUART low-level driver
  */
 
-#ifndef __FREEMASTER_S32S247TV_LINFLEXD_H
-#define __FREEMASTER_S32S247TV_LINFLEXD_H
+#ifndef __FREEMASTER_S32_LPUART_H
+#define __FREEMASTER_S32_LPUART_H
 
 /******************************************************************************
 * Required header files include check
 ******************************************************************************/
 #ifndef __FREEMASTER_H
-#error Please include the freemaster.h master header file before the freemaster_s32s247tv_linflexd.h
+#error Please include the freemaster.h master header file before the freemaster_s32_lpuart.h
 #endif
 
 /******************************************************************************
@@ -32,7 +32,7 @@
 #ifdef __cplusplus
   extern "C" {
 #endif
-      
+
 /******************************************************************************
 * Types definition
 ******************************************************************************/
@@ -52,4 +52,4 @@ void FMSTR_SerialIsr(void);
   }
 #endif
 
-#endif /* __FREEMASTER_S32S247TV_LINFLEXD_H */
+#endif /* __FREEMASTER_S32_LPUART_H */
