@@ -11,7 +11,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
 ### Platform
 
-        choice
+        choice FMSTR_CHOICE_PLATFORM
             prompt "Platform"
             default MCUX_COMPONENT_middleware.fmstr.platform_gen32le
 
@@ -120,7 +120,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
 ### Communication mode
 
-                    choice
+                    choice FMSTR_CHOICE_COMMUNICATION_MODE
                         prompt "Communication mode"
                         default FMSTR_POLL_DRIVEN
 
@@ -145,7 +145,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
 ### Communication interface
 
-                    choice
+                    choice FMSTR_CHOICE_COMMUNICATION_INTERFACE
                         prompt "Communication interface"
                         default FMSTR_SERIAL
 
@@ -187,7 +187,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
                     if FMSTR_SERIAL
 
-                        choice
+                        choice FMSTR_CHOICE_SERIAL_DRIVER
                             prompt "Serial driver"
                             default FMSTR_SERIAL_MCUX_UART
 
@@ -278,7 +278,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
                     if FMSTR_CAN
 
-                        choice
+                        choice FMSTR_CHOICE_CAN_DRIVER
                             prompt "CAN driver"
                             default FMSTR_CAN_MCUX_FLEXCAN
 
@@ -430,7 +430,7 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
 
                     if FMSTR_NET
 
-                        choice
+                        choice FMSTR_CHOICE_NET_DRIVER
                             prompt "NET driver"
                             default FMSTR_NET_LWIP_TCP
 
