@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007-2015 Freescale Semiconductor, Inc.
- * Copyright 2018-2021, 2024 NXP
+ * Copyright 2018-2021, 2024-2025 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -233,6 +233,10 @@
 #define FMSTR_USE_TSA_DYNAMIC 0
 #endif
 
+#ifndef FMSTR_TSA_USER_TABLES
+#define FMSTR_TSA_USER_TABLES 0
+#endif
+
 /* use TSA user-defined resources (experimental feature) */
 #ifndef FMSTR_USE_URES
 #define FMSTR_USE_URES 0
@@ -257,7 +261,7 @@
 #error Number of enabled pipes MUST be smaller than 127.
 #endif
 
-#if FMSTR_USE_PIPES > 0
+#if FMSTR_USE_PIPE_PRINTF > 0
 /* pipe printf buffer */
 #ifndef FMSTR_PIPES_PRINTF_BUFF_SIZE
 #define FMSTR_PIPES_PRINTF_BUFF_SIZE 48U
@@ -345,14 +349,9 @@
 #define FMSTR_SERIAL_MPC57XP_LINFLEX_ID      305
 #define FMSTR_CAN_S12Z_MSCAN_ID              306
 #define FMSTR_SERIAL_S12Z_SCI_ID             307
-#define FMSTR_SERIAL_S32G274A_LINFLEXD_ID    308
-#define FMSTR_SERIAL_S32K144_LPUART_ID       309
-#define FMSTR_SERIAL_S32K3XX_LPUART_ID       310
-#define FMSTR_SERIAL_S32M2XX_LPUART_ID       311
-#define FMSTR_SERIAL_S32N_LINFLEXD_ID        312
-#define FMSTR_SERIAL_S32R45_LINFLEXD_ID      313
-#define FMSTR_SERIAL_S32S247TV_LINFLEXD_ID   314
-#define FMSTR_SERIAL_S32Z2E2_LINFLEXD_ID     315
+#define FMSTR_SERIAL_S32_LPUART_ID           308
+#define FMSTR_SERIAL_S32_LINFLEXD_ID         309
+#define FMSTR_CAN_S32_FLEXCAN_ID             310
 
 /* MCUX drivers */
 #define FMSTR_CAN_MCUX_FLEXCAN_ID            401
