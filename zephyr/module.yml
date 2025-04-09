@@ -1,0 +1,4 @@
+name: nxp_freemaster
+build:
+  cmake: zephyr
+  kconfig: zephyr/Kconfig

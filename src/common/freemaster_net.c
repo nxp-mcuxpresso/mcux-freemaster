@@ -125,18 +125,11 @@ static FMSTR_BOOL _FMSTR_NetInit(void)
 
 static void _FMSTR_NetPoll(void)
 {
-    FMSTR_BOOL res = FMSTR_FALSE;
+    /* Poll network driver */
+    FMSTR_NET_DRV.Poll();
 
-    do
-    {
-        /* Poll network driver */
-        FMSTR_NET_DRV.Poll();
-
-        /* Process the protocol */
-        res = _FMSTR_NetProcess();
-
-        /* Repeat while communication is active. */
-    } while (res != FMSTR_FALSE);
+    /* Process the protocol */
+    (void)_FMSTR_NetProcess();
 }
 
 /******************************************************************************

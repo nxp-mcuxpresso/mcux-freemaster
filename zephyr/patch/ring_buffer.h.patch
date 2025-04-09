@@ -1,0 +1,15 @@
+diff --git a/include/zephyr/sys/ring_buffer.h b/include/zephyr/sys/ring_buffer.h
+index e104fd5443e..074e99361f4 100644
+--- a/include/zephyr/sys/ring_buffer.h
++++ b/include/zephyr/sys/ring_buffer.h
+@@ -294,8 +294,9 @@ static inline uint32_t ring_buf_put_claim(struct ring_buf *buf,
+ 					  uint8_t **data,
+ 					  uint32_t size)
+ {
++	uint32_t space = ring_buf_space_get(buf);
+ 	return ring_buf_area_claim(buf, &buf->put, data,
+-				   MIN(size, ring_buf_space_get(buf)));
++				   MIN(size, space));
+ }
+ 
+ /**

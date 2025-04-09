@@ -1,0 +1,591 @@
+#############################################################################
+### FreeMASTER communication driver
+
+menuconfig USE_FREEMASTER
+    bool "Use FreeMASTER"
+    help
+        FreeMASTER communication driver code,
+        enabling communication between FreeMASTER
+        or FreeMASTER Lite tools and MCU application.
+
+if USE_FREEMASTER
+
+    config FMSTR_PLATFORM_ZEPHYR
+        bool
+        default y
+        select EVENTS
+
+    #############################################################################
+    ### Own working thread
+
+    config FMSTR_USE_THREAD
+        bool "Auto-create own working thread"
+        default y
+        help
+            Auto-create FreeMASTER thread which does initialization
+            and handles communication and protocol processing.
+
+    if FMSTR_USE_THREAD
+
+        config FMSTR_THREAD_STACK_SIZE
+            int "Thread stack size"
+            default 1024
+            help
+                Stack size for FreeMASTER working thread.
+
+        config FMSTR_THREAD_PRIORITY
+            int "Thread priority"
+            default 3
+            help
+                Priority of FreeMASTER working thread. The thread waits
+                for the communication most of the time.
+    endif
+
+    #############################################################################
+    ### Communication interface
+
+    choice FMSTR_COMMUNICATION_INTERFACE
+        prompt "Communication interface"
+        default FMSTR_SERIAL_ZEPHYR_UART
+        help
+            FreeMASTER Communication interface.
+
+        config FMSTR_SERIAL_ZEPHYR_UART
+            bool "Zephyr serial driver using 'freemaster,uart' device"
+            select SERIAL
+            select UART_INTERRUPT_DRIVEN
+            help
+                Use generic Zephyr uart driver API. The uart device needs to be chosen or aliased in
+                DTS overlay as "freemaster,uart". If not defined in DTS, a default zephyr serial console
+                port is used.
+
+        config FMSTR_SERIAL_ZEPHYR_USB
+            bool "Zephyr USB device stack using 'freemaster,usb' device"
+            select SERIAL
+            select UART_INTERRUPT_DRIVEN
+            select USB_DEVICE_STACK
+            help
+                Use Zephyr USB device stack to implement virtual serial port. The USB CDC ACM device
+                needs to be chosen or aliased in DTS overlay as "freemaster,usb". If not defined in
+                DTS, a default USB device port zephyr_udc0 is used.
+
+        config FMSTR_CAN_ZEPHYR_GENERIC
+            bool "Zephyr CAN driver using 'freemaster,can' device"
+            select CAN
+            help
+                Use generic Zephyr CAN driver API. The CAN device needs to be chosen or aliased in
+                DTS overlay as "freemaster,can". If not defined in DTS, a default Zephyr CAN
+                port zephyr_canbus is used.
+
+        config FMSTR_NET_ZEPHYR_TCP
+            bool "Zephyr TCP"
+            select NETWORKING
+            select NET_SOCKETS
+            select NET_TCP
+            select NET_IPV4
+            select TEST_RANDOM_GENERATOR
+            help
+                TCP stream-oriented connection using Zephyr TCP/IP stack.
+
+        config FMSTR_NET_ZEPHYR_UDP
+            bool "Zephyr UDP"
+            select NETWORKING
+            select NET_SOCKETS
+            select NET_UDP
+            select NET_IPV4
+            select TEST_RANDOM_GENERATOR
+            help
+                UDP datagram-oriented connection using Zephyr TCP/IP stack.
+
+        config FMSTR_SEGGER_RTT_ZEPHYR
+            bool "SEGGER RTT"
+            select USE_SEGGER_RTT
+            help
+                SEGGER RTT using J-Link debugger probe.
+
+        config FMSTR_PDBDM_ZEPHYR
+            bool "PD-BDM using JTAG port"
+            help
+                Packet Driven BDM which uses JTAG port to exchange protocol data.
+
+    endchoice
+
+    #############################################################################
+    ### Communication mode
+
+    choice
+        prompt "Communication interrupt mode"
+        default FMSTR_SHORT_INTR if FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB || FMSTR_CAN_ZEPHYR_GENERIC
+        default FMSTR_POLL_DRIVEN
+
+        config FMSTR_LONG_INTR
+            bool "Long ISR - communication and protocol processing in interrupt"
+            help
+                Complete message processing in communication device interrupt routine.
+                The worker thread is only needed for debugging services.
+
+        config FMSTR_SHORT_INTR
+            bool "Short ISR - data buffering in interrupt, protocol processing polled in thread"
+            help
+                Data queuing done in communication device interrupt routine, protocol
+                is decoded by a worker thread.
+
+        config FMSTR_POLL_DRIVEN
+            bool "Poll - both communication and protocol processing polled in thread"
+            help
+                No device interrupt is used, communication is polled by a worker thread.
+    endchoice
+
+
+    #############################################################################
+    ### Comm interface-specific settings
+
+    ### Serial configuration
+
+    if (FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB) && FMSTR_SHORT_INTR
+        menu "Serial interface configuration"
+
+            config FMSTR_COMM_RQUEUE_SIZE
+                int "Queue size for short-interrupt mode"
+                default 255 if FMSTR_SERIAL_ZEPHYR_USB
+                default 32
+                depends on FMSTR_SHORT_INTR
+                help
+                    Set intermediate queue size for short ISR mode.
+        endmenu
+    endif
+
+    ### CAN configuration
+
+    if FMSTR_CAN_ZEPHYR_GENERIC
+        menu "CAN interface configuration"
+
+            config FMSTR_CAN_OVERRIDE_CANIDS
+                bool "Override CAN message IDs"
+
+            if FMSTR_CAN_OVERRIDE_CANIDS
+                config FMSTR_CAN_CMDID
+                    int "Command CAN ID"
+                    default 1962
+                    help
+                        Command CAN message ID (from PC to target). May be the same as response ID.
+
+                config FMSTR_CAN_RESPID
+                    int "Response CAN ID"
+                    default 1962
+                    help
+                        Command CAN message ID (from target to PC). May be the same as command ID.
+            endif
+        endmenu
+    endif
+
+    ### Network configuration
+
+    if FMSTR_NET_ZEPHYR_TCP || FMSTR_NET_ZEPHYR_UDP
+        menu "Network interface configuration"
+
+            config FMSTR_NET_PORT
+                int "Server port number"
+                default 3344
+                help
+                    Server port number (used for both TCP or UDP).
+
+            config FMSTR_NET_BLOCKING_TIMEOUT
+                int "Blocking timeout (ms)"
+                default 250
+                help
+                    Blocking timeout (ms) of network calls used by worker thread in FMSTR_Poll.
+
+            config FMSTR_SESSION_COUNT
+                int "Maximum client session count"
+                default 1
+                depends on FMSTR_NET_ZEPHYR_TCP
+                help
+                    Maximum number of simultaneous client sessions.
+
+            config FMSTR_NET_AUTODISCOVERY
+                bool "Automatic board discovery"
+                default y
+                help
+                    Enable automatic board discovery via UDP.
+        endmenu
+    endif
+
+    ### SEGGER RTT configuration
+
+    if FMSTR_SEGGER_RTT_ZEPHYR
+        menu "Segger RTT interface configuration"
+
+            config FMSTR_NET_SEGGER_RTT_BUFFER_INDEX
+                int "RTT buffer index"
+                default 0
+                help
+                    SEGGER RTT buffer index.
+
+            config FMSTR_RTT_RX_POLL_PERIOD_us
+                int "RTT data poll period [us]"
+                default 100
+                help
+                    Timer period of checking new RTT data reception.
+        endmenu
+    endif
+
+    ### PDBDM configuration
+
+    if FMSTR_PDBDM_ZEPHYR
+        menu "PDBDM interface configuration"
+
+            config FMSTR_PDBDM_USER_BUFFER
+                bool "User-defined PDBDM buffer"
+                default n
+                depends on FMSTR_PDBDM_ZEPHYR
+                help
+                    User defined PDBDM buffer (e.g. when special section placement needed).
+        endmenu
+    endif
+
+    #############################################################################
+    ### More communication options
+
+    menu "More communication options"
+        config FMSTR_COMM_BUFFER_SIZE
+            int "Communication buffer size (0=automatic)"
+            default 0
+            help
+                Input/output communication buffer size.
+                Set to 0 for "automatic".
+    endmenu
+
+
+    #############################################################################
+    ### Misc
+
+    menu "Application strings"
+
+        config FMSTR_APPLICATION_STR
+            string "Application name"
+            default "Zephyr app"
+            help
+                Application name visible to FreeMASTER tool
+
+        config FMSTR_DESCRIPTION_STR
+            string "Description"
+            default "Zephyr demo application"
+            help
+                Application description name visible to FreeMASTER tool
+    endmenu
+
+    #############################################################################
+    ### Memory access
+
+    menu "Basic memory access"
+
+        config FMSTR_USE_READMEM
+            bool "Read memory support"
+            default y
+            help
+                Enable basic read-memory commands.
+
+        config FMSTR_USE_WRITEMEM
+            bool "Write memory support"
+            default y
+            help
+                Enable write-memory commands.
+
+        config FMSTR_USE_WRITEMEMMASK
+            bool "Write memory bits support"
+            default y
+            help
+                Enable write-memory-bits commands.
+    endmenu
+
+    #############################################################################
+    ### TSA
+
+    config FMSTR_USE_TSA
+        bool "TSA tables - target-defined symbols"
+        default y
+        help
+            Target-side address translation (TSA) enables user to define symbols and
+            data types visible to FreeMASTER host application. The host application
+            may use the TSA information instead of parsing an ELF file.
+
+    if FMSTR_USE_TSA
+
+        config FMSTR_USE_TSA_INROM
+            bool "TSA tables in ROM"
+            default y
+            help
+                TSA tables declared as const (put to ROM).
+
+        config FMSTR_USE_TSA_SAFETY
+            bool "TSA memory protection"
+            default n
+            help
+                Enable/Disable TSA memory protection. When enabled, FreeMASTER will not
+                be able to access variables other than described by TSA tables.
+
+        config FMSTR_USE_TSA_DYNAMIC
+            bool "TSA entries modification in runtime"
+            default y
+            help
+                Enable/Disable TSA entries to be added also in runtime.
+    endif
+
+
+    #############################################################################
+    ### Oscilloscope
+
+    config FMSTR_OSCILLOSCOPE
+        bool "Oscilloscope support"
+        default y
+        help
+            FreeMASTER Oscilloscope enables optimized real-time sampling
+            of multiple variables.
+
+    if FMSTR_OSCILLOSCOPE
+
+        config FMSTR_USE_SCOPE
+            int "Number of Oscilloscopes supported"
+            default 1
+            help
+                Number of oscilloscopes allowed to run simultaneously.
+
+        if FMSTR_USE_SCOPE > 0
+            config FMSTR_MAX_SCOPE_VARS
+                int "Maximum variables per one oscilloscope"
+                default 8
+                help
+                    Maximum number of scope variables per one oscilloscope.
+        endif
+    endif
+
+
+    #############################################################################
+    ### Recorder
+
+    config FMSTR_RECORDER
+        bool "Recorder support"
+        default y
+        help
+            FreeMASTER Recorder enables high-speed variable value recording
+            into on-board memory.
+
+    if FMSTR_RECORDER
+
+        config FMSTR_USE_RECORDER
+            int "Number of Recorders supported"
+            default 1
+            help
+                Number of recorders allowed to run simultaneously.
+
+        if FMSTR_USE_RECORDER > 0
+
+            menu "Recorder #0 configuration"
+
+                config FMSTR_REC_BUFF_SIZE
+                    int "Recorder buffer size"
+                    default 1024
+                    help
+                        Built-in buffer size of recorder.
+                        Set to 0 to use runtime settings.
+
+                config FMSTR_REC_TIMEBASE_us
+                    int "Recorder time base in microseconds"
+                    default 0
+                    help
+                        Recorder time base (0 = "unknown"),
+                        specifies how often the recorder is called in the user app.
+
+            endmenu
+
+        endif
+
+        if FMSTR_USE_RECORDER > 1
+            menu "Note: Recorder #1 and other instances are set up in runtime. No configuration here."
+            endmenu
+        endif
+
+        config FMSTR_REC_FLOAT_TRIG
+            bool "Floating point triggering support"
+            help
+                Enable/disable floating point triggering of the Recorder sampling.
+                Requires floating point library to be linked.
+    endif
+
+
+    #############################################################################
+    ### Pipes
+
+    config FMSTR_PIPES
+        bool "Pipes support"
+        default y
+        help
+            Pipes enable data streaming between MCU and FreeMASTER - such as
+            console terminal I/O, data logging etc. Pipe endpoint must
+            be open by MCU application in runtime.
+
+    if FMSTR_PIPES
+
+        config FMSTR_USE_PIPES
+            int "Number of Pipes supported"
+            default 1
+            help
+                Specify number of pipes which can be open simultaneously.
+                Pipes must be open by MCU application in runtime.
+
+        if FMSTR_USE_PIPES > 0
+
+            config FMSTR_USE_PIPE_SHELL
+                bool "Zephyr shell and logging over FreeMASTER pipe"
+                default n
+
+            if FMSTR_USE_PIPE_SHELL
+                config FMSTR_SHELL_PIPE_PORT
+                    int "Shell pipe port (0 to prevent automatic shell thread start)"
+                    default 112
+
+                config FMSTR_SHELL_PIPE_RXBUF_SIZE
+                    int "Shell RX buffer size"
+                    default 128
+
+                config FMSTR_SHELL_PIPE_TXBUF_SIZE
+                    int "Shell TX buffer size"
+                    default 1024
+
+                config FMSTR_SHELL_PROMPT
+                    string "Shell prompt"
+                    default "zephyr> "
+
+                config FMSTR_SHELL_INIT_LOG_LEVEL
+                    int "Default log-level over FreeMASTER shell"
+                    default 0
+                    help
+                        Use Zephyr standard log-levels: NONE=0, ERR=1, WRN=2, INF=3, DBG=4
+            endif
+        endif
+    endif
+
+    #############################################################################
+    ### Application commands
+
+    config FMSTR_USE_APPCMD
+        bool "Application Commands support"
+        default y
+        help
+            Enable/disable App.Commands support.
+
+    if FMSTR_USE_APPCMD
+
+        config FMSTR_APPCMD_BUFF_SIZE
+            int "Command data buffer size"
+            default 32
+            help
+                App.command data buffer size.
+
+        config FMSTR_MAX_APPCMD_CALLS
+            int "Command callbacks count"
+            default 4
+            help
+                How many application command callbacks can be supported? (0=disable).
+    endif
+
+
+    #############################################################################
+    ### Passwords
+
+    config FMSTR_USE_PASSWORDS
+        bool "Access-levels and passwords support"
+        default n
+        help
+            Enable password protection of FreeMASTER features.
+
+    if FMSTR_USE_PASSWORDS
+
+        config FMSTR_USE_RESTRICTED_ACCESS_R_PASSWORD
+            bool "Read-only mode password"
+            default n
+            help
+                Read-only access level password.
+                Let disabled when no password is required.
+
+        config FMSTR_RESTRICTED_ACCESS_R_PASSWORD
+            string "Password"
+            default "password-here"
+            depends on FMSTR_USE_RESTRICTED_ACCESS_R_PASSWORD
+            help
+                Read-only access level password.
+                Let undefined when no password is required.
+
+        config FMSTR_USE_RESTRICTED_ACCESS_RW_PASSWORD
+            bool "Write mode password"
+            default n
+            help
+                Write access level password.
+                Let disabled to set the same as for read-only access level.
+
+        config FMSTR_RESTRICTED_ACCESS_RW_PASSWORD
+            string "Password"
+            default "password-here"
+            depends on FMSTR_USE_RESTRICTED_ACCESS_RW_PASSWORD
+            help
+                Write access level password.
+                Let undefined to set the same as for read-only access level.
+
+        config FMSTR_USE_RESTRICTED_ACCESS_RWF_PASSWORD
+            bool "Flash-write mode password"
+            default n
+            help
+                Full/flash access level password.
+                Let disabled to set the same as for write access level.
+
+        config FMSTR_RESTRICTED_ACCESS_RWF_PASSWORD
+            string "Password"
+            default "password-here"
+            depends on FMSTR_USE_RESTRICTED_ACCESS_RWF_PASSWORD
+            help
+                Full/flash access level password.
+                Let undefined to set the same as for write access level.
+
+        config FMSTR_USE_HASHED_PASSWORDS
+            bool "Store passwords as SHA1 hash"
+            depends on FMSTR_USE_RESTRICTED_ACCESS_R_PASSWORD || FMSTR_USE_RESTRICTED_ACCESS_RW_PASSWORD || FMSTR_USE_RESTRICTED_ACCESS_RWF_PASSWORD
+            default n
+            help
+                Storing cleartext passwords in Flash memory is not safe, consider
+                storing their SHA1 hash instead. Even with this option, the hash must
+                be generated from reasonably complex password to prevent dictionary attack.
+                When non-zero, all passwords are specified as a pointer to 20-byte
+                SHA1 hash of password text.
+    endif
+
+    #############################################################################
+    ### Debug
+    menu "Debugging"
+
+        config FMSTR_DISABLE
+            bool "Turn-off FreeMASTER temporarily, the API will compile as empty code"
+            default n
+            help
+                Turn-off the whole FreeMASTER support temporarily.
+                All FreeMASTER API functions compile empty but are
+                still callable, so there is no need to change user code.
+
+        config FMSTR_DEBUG_LEVEL
+            int "Debugging logging level"
+            default 0
+            help
+                Debugging print level (0=none, 1=errors, 2=normal, 3=verbose).
+
+        config FMSTR_DEBUG_TX
+            bool "Transmit debug data"
+            default n
+            help
+                Debug-TX mode is a special mode used to test or debug the data transmitter.
+                The driver will be sending test frames periodically until a first valid command
+                is received from the PC Host. User can attach a logic analyzer to transmission
+                pins to determine port and baudrate. You can also connect the FreeMASTER tool
+                and run the connection wizard to listen for dummy frames.
+    endmenu
+
+endif
