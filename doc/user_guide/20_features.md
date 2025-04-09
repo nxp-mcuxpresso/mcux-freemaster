@@ -19,7 +19,7 @@ The FreeMASTER driver features:
 - Layered approach supporting Serial, CAN, Network, PD-BDM, and other transports.
 - Layered low-level Serial transport driver architecture enabling to select UART, LPUART, USART, and other physical implementations of serial interfaces, including USB-CDC.
 - Layered low-level CAN transport driver architecture enabling to select FlexCAN, msCAN, MCAN, and other physical implementations of the CAN interface.
-- Layered low-level Networking transport enabling to select TCP, UDP or J-Link RTT communication. 
+- Layered low-level Networking transport enabling to select TCP, UDP or J-Link RTT communication.
 - TSA support to write-protect memory regions or individual variables and to deny the access to the unsafe memory.
 - The pipe callback handlers are invoked whenever new data is available for reading from the pipe.
 - Two Serial Single-Wire modes of operation are enabled. The “external” mode has the RX and TX shorted on-board. The “true” single-wire mode interconnects internally when the MCU or UART modules support it.
@@ -100,3 +100,25 @@ The MCU Serial Communication Driver natively supports normal dual-wire operation
 ## Multi-session support
 
 With networking interface it is possible for multiple clients to access the target MCU simultaneously. Reading and writing of target memory is processed atomically so there is no risk of data corruption. The state-full resources such as Recorders or Oscilloscopes are locked to a client session upon first use and access is denied to other clients until lock is released..
+
+## Zephyr-specific
+
+### Dedicated communication task
+
+FreeMASTER communication may run isolated in a dedicated task. The task automates the FMSTR_Init and FMSTR_Poll calls
+together with periodic activities enabling the FreeMASTER UI to fetch information about tasks and CPU utilization.
+The task can be started automatically or manually, and it must be assigned a priority to be able to
+react on interrupts and other communication events. Refer to Zephyr FreeMASTER sample applications which all use this
+communication task.
+
+### Zephyr shell and logging over FreeMASTER pipe
+
+FreeMASTER implements a shell backend which may use FreeMASTER pipe as a I/O terminal and logging output.
+Refer to Zephyr FreeMASTER sample applications which all use this feature.
+
+### Automatic TSA tables
+
+TSA tables can be declared as "automatic" in Zephyr which make them automatically registered in the
+table list. This may be very useful when there are many TSA tables or when the tables are defined
+in different (often unrelated) libraries linked together. In this case user does not need to build
+a list of all tables manually.

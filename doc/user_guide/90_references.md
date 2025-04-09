@@ -1,6 +1,8 @@
 # Links
+- This document online: [https://mcuxpresso.nxp.com/mcuxsdk/latest/html/middleware/freemaster/doc/index.html](https://mcuxpresso.nxp.com/mcuxsdk/latest/html/middleware/freemaster/doc/index.html)
 - FreeMASTER tool home: [www.nxp.com/freemaster](https://www.nxp.com/freemaster)
 - FreeMASTER community area: [community.nxp.com/community/freemaster](https://community.nxp.com/community/freemaster)
+- FreeMASTER GitHub code repo: [https://github.com/nxp-mcuxpresso/mcux-freemaster](https://github.com/nxp-mcuxpresso/mcux-freemaster)
 - MCUXpresso SDK home: [www.nxp.com/mcuxpresso](https://www.nxp.com/mcuxpresso)
 - MCUXpresso SDK builder: [mcuxpresso.nxp.com/en](https://mcuxpresso.nxp.com/en)
 
