@@ -137,6 +137,7 @@ static FMSTR_BOOL _FMSTR_NetLwipTcpInit(void)
     destAddr4.sin_port = htons(FMSTR_NET_PORT);
 
     /* Create new listen socket. Ignore errno value prior to call. */
+    errno = 0;
     /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
     fmstrTcpListenSock = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_IP); // TODO: IPv6?
     if (errno != 0 || fmstrTcpListenSock < 0)
@@ -179,6 +180,7 @@ static FMSTR_BOOL _FMSTR_NetLwipTcpInit(void)
     bindAddr.sin_port        = htons(FMSTR_NET_PORT);
 
     /* Create new UDP listen socket */
+    errno = 0;
     fmstrUdpBroadcastSock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     if (errno != 0 || fmstrUdpBroadcastSock < 0)
     {
@@ -265,6 +267,7 @@ static void _FMSTR_NetLwipTcpAccept(void)
     length = sizeof(remote_addr);
 
     /* Accept connection. Ignore errno value prior to accept call. */
+    errno = 0;
     /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
     newSock = lwip_accept(fmstrTcpListenSock, &remote_addr, &length);
     if (errno == 0 && newSock >= 0)
@@ -362,6 +365,7 @@ static void _FMSTR_NetLwipTcpPoll(void)
         }
 
         /* Select ready sockets (ignore coverity warning in 3rd party code) */
+        errno = 0;
         /* coverity[misra_c_2012_rule_18_6_violation:FALSE] */
         /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
         /* coverity[cert_dcl30_c_violation:FALSE] */
@@ -428,6 +432,7 @@ static FMSTR_S32 _FMSTR_NetLwipTcpRecv(FMSTR_BPTR msgBuff,
         *isBroadcast = FMSTR_TRUE;
 
         /* Ignore errno value prior and after receive call. */
+        errno = 0;
         /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
         /* coverity[misra_c_2012_rule_22_9_violation:FALSE] */
         /* coverity[misra_c_2012_directive_4_7_violation:FALSE] */
@@ -442,6 +447,7 @@ static FMSTR_S32 _FMSTR_NetLwipTcpRecv(FMSTR_BPTR msgBuff,
 #endif /* FMSTR_NET_AUTODISCOVERY */
     {
         /* Ignore errno value prior and after receive call. */
+        errno = 0;
         /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
         res = lwip_recv(ses->sock, msgBuff, msgMaxSize, 0);
         (void)errno;
@@ -504,6 +510,7 @@ static FMSTR_S32 _FMSTR_NetLwipTcpSend(FMSTR_NET_ADDR *sendAddr, FMSTR_BPTR msgB
         FMSTR_MemCpy(&destAddr4.sin_addr.s_addr, sendAddr->addr.v4, 4);
 
         /* Send data (intentional generic sockaddr casting and no errno checking prior to call) */
+        errno = 0;
         /* coverity[misra_c_2012_rule_11_3_violation:FALSE] */
         /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
         res = lwip_sendto(ses->sock, msgBuff, msgSize, 0, (struct sockaddr *)&destAddr4, sizeof(destAddr4));
@@ -512,6 +519,7 @@ static FMSTR_S32 _FMSTR_NetLwipTcpSend(FMSTR_NET_ADDR *sendAddr, FMSTR_BPTR msgB
 #endif
     {
         /* Send data (intentional generic sockaddr casting and no errno checking prior to call) */
+        errno = 0;
         /* coverity[misra_c_2012_rule_11_3_violation:FALSE] */
         /* coverity[misra_c_2012_rule_22_8_violation:FALSE] */
         res = lwip_send(ses->sock, msgBuff, msgSize, 0);
