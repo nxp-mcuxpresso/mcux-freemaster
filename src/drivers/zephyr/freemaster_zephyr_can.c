@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 NXP
+ * Copyright 2024-2025 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -62,6 +62,8 @@ static const struct device *fmstr_canDev = DEV_FREEMASTER_CAN;
 static const struct device *fmstr_canDev = NULL;
 #endif
 
+/* CAN mode */
+static can_mode_t fmstr_canmode = CAN_MODE_NORMAL;
 /* Rx filter for fmstr messages */
 static struct can_filter fmstr_rxfilter;
 /* Frame for fmstr messages to be sent */
@@ -86,6 +88,7 @@ static FMSTR_BOOL _FMSTR_CanZephyrPrepareTxFrame(void);              /* Initiali
 static void _FMSTR_CanZephyrPutTxFrameByte(FMSTR_SIZE8 index, FMSTR_BCHR data); /* Fill one byte of transmit data. */
 static void _FMSTR_CanZephyrSendTxFrame(FMSTR_SIZE8 len);            /* Send the Tx buffer. */
 static void _FMSTR_CanZephyrPoll(void);                              /* General poll call (optional) */
+static void _FMSTR_CanZephyrGetCaps(FMSTR_CAN_IF_CAPS *caps);        /* Get driver capabilities (optional) */
 
 /* IRQ callbacks */
 static void _FMSTR_CanZephyrRxCallback(const struct device *dev, struct can_frame *frame, void *user_data); /* CAN Rx data callback */
@@ -110,17 +113,18 @@ void FMSTR_CanSetDevice(const struct device * dev)
  ***********************************/
 
 const FMSTR_CAN_DRV_INTF FMSTR_ZEPHYR_CAN_DRV = {
-    .Init =              _FMSTR_CanZephyrInit,
+    .Init              = _FMSTR_CanZephyrInit,
     .EnableTxInterrupt = _FMSTR_CanZephyrEnableTxInterrupt,
     .EnableRxInterrupt = _FMSTR_CanZephyrEnableRxInterrupt,
-    .EnableRx =          _FMSTR_CanZephyrEnableRx,
-    .GetRxFrameLen =     _FMSTR_CanZephyrGetRxFrameLen,
-    .GetRxFrameByte =    _FMSTR_CanZephyrGetRxFrameByte,
-    .AckRxFrame =        _FMSTR_CanZephyrAckRxFrame,
-    .PrepareTxFrame =    _FMSTR_CanZephyrPrepareTxFrame,
-    .PutTxFrameByte =    _FMSTR_CanZephyrPutTxFrameByte,
-    .SendTxFrame =       _FMSTR_CanZephyrSendTxFrame,
-    .Poll =              _FMSTR_CanZephyrPoll,
+    .EnableRx          = _FMSTR_CanZephyrEnableRx,
+    .GetRxFrameLen     = _FMSTR_CanZephyrGetRxFrameLen,
+    .GetRxFrameByte    = _FMSTR_CanZephyrGetRxFrameByte,
+    .AckRxFrame        = _FMSTR_CanZephyrAckRxFrame,
+    .PrepareTxFrame    = _FMSTR_CanZephyrPrepareTxFrame,
+    .PutTxFrameByte    = _FMSTR_CanZephyrPutTxFrameByte,
+    .SendTxFrame       = _FMSTR_CanZephyrSendTxFrame,
+    .Poll              = _FMSTR_CanZephyrPoll,
+    .GetCaps           = _FMSTR_CanZephyrGetCaps
 };
 
 /******************************************************************************
@@ -155,6 +159,9 @@ static FMSTR_BOOL _FMSTR_CanZephyrInit(FMSTR_U32 idRx, FMSTR_U32 idTx)
     {
         /* Check CAN bus */
         while(!device_is_ready(fmstr_canDev));
+
+        /* Get mode of the CAN controller */
+        can_get_capabilities(fmstr_canDev, &fmstr_canmode);
 
         /* Start the CAN controller */
         int err = can_start(fmstr_canDev);
@@ -275,6 +282,15 @@ static void _FMSTR_CanZephyrSendTxFrame(FMSTR_SIZE8 len)
 {
     fmstr_txmsg.dlc = can_bytes_to_dlc(len);
 
+    if (fmstr_canmode & CAN_MODE_FD)
+    {
+        fmstr_txmsg.flags |= CAN_FRAME_FDF;
+
+#if defined(FMSTR_CANFD_USE_BRS) && FMSTR_CANFD_USE_BRS != 0
+        fmstr_txmsg.flags |= CAN_FRAME_BRS;
+#endif
+    }
+
     can_send(fmstr_canDev, &fmstr_txmsg, K_MSEC(10), _FMSTR_CanZephyrTxCallback, NULL);
 }
 
@@ -298,6 +314,23 @@ static void _FMSTR_CanZephyrPoll(void)
        Cannot sleep forever, the debug transmission can follow in upper layer. */
     FMSTR_WaitEvents(FMSTR_EVENT_DATA_AVAILABLE, true, 10);
 #endif
+}
+
+/******************************************************************************
+ *
+ * @brief    Get CAN driver capabilities.
+ *
+ ******************************************************************************/
+static void _FMSTR_CanZephyrGetCaps(FMSTR_CAN_IF_CAPS *caps)
+{
+    FMSTR_ASSERT(caps != NULL);
+
+    caps->flags = 0;
+
+    if ((fmstr_canmode & CAN_MODE_FD) != 0)
+    {
+        caps->flags |= FMSTR_CAN_IF_CAPS_FLAG_FD;
+    }
 }
 
 /******************************************************************************

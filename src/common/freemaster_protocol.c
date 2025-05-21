@@ -216,6 +216,7 @@ FMSTR_BOOL FMSTR_Init(void)
     FMSTR_DEBUG_PRINTF("FMSTR Init finished, ok=%d\n", (int)ok);
 #endif
 
+    FMSTR_ASSERT(ok != FMSTR_FALSE);
     return ok;
 }
 

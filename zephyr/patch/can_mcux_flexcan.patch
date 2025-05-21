@@ -1,0 +1,112 @@
+diff --git a/drivers/can/Kconfig.mcux b/drivers/can/Kconfig.mcux
+index e2ee5a8d27d..976a26462a5 100644
+--- a/drivers/can/Kconfig.mcux
++++ b/drivers/can/Kconfig.mcux
+@@ -28,6 +28,12 @@ config CAN_MCUX_FLEXCAN_WAIT_TIMEOUT
+ 	  Maximum number of wait loop iterations for the MCUX FlexCAN HAL when entering/leaving
+ 	  freeze mode.
+ 
++config CAN_MCUX_FLEXCAN_IMPROVE_TIMING_VALUES
++	bool "Improve timing values"
++	default y
++	help
++	  Automatically improve used CAN/CAN-FD timing values based on bitrate. The FlexCAN hardware enables better granularity of time quanta values so it makes sense to try to improve values inferred by generic Zephyr CAN layer.
++
+ config CAN_MAX_MB
+ 	int "Maximum number of message buffers for concurrent active instances"
+ 	default 16
+diff --git a/drivers/can/can_mcux_flexcan.c b/drivers/can/can_mcux_flexcan.c
+index e7bafb5e566..0876d51a753 100644
+--- a/drivers/can/can_mcux_flexcan.c
++++ b/drivers/can/can_mcux_flexcan.c
+@@ -242,6 +242,50 @@ static void mcux_flexcan_mb_stop(const struct device *dev, int alloc)
+ #endif /* CONFIG_CAN_MCUX_FLEXCAN_FD */
+ }
+ 
++#ifdef CONFIG_CAN_MCUX_FLEXCAN_IMPROVE_TIMING_VALUES
++static int mcux_flexcan_calculate_bitrate(uint32_t clock_freq, uint16_t preDivider, uint8_t propSeg, uint8_t phaseSeg1, uint8_t phaseSeg2, uint32_t *bitrate)
++{
++	if (preDivider == 0)
++		return -EINVAL;
++
++	if (bitrate) {
++		*bitrate = clock_freq /
++			(1U + propSeg + phaseSeg1 + phaseSeg2) / preDivider;
++	}
++
++	return 0;
++}
++
++static void mcux_flexcan_improve_timing(const struct device *dev, flexcan_timing_config_t *timing)
++{
++	uint32_t bitrate = 0;
++	uint32_t clock_freq = 0;
++	const struct mcux_flexcan_config *config = dev->config;
++
++	if (mcux_flexcan_get_core_clock(dev, &clock_freq) != 0)
++		return;
++
++	if (mcux_flexcan_calculate_bitrate(clock_freq, timing->preDivider+1U, timing->propSeg+1U, timing->phaseSeg1+1U, timing->phaseSeg2+1U, &bitrate) != 0)
++		return;
++
++	/* Let driver calculate improved timing values */
++#ifdef CONFIG_CAN_MCUX_FLEXCAN_FD
++	if (config->flexcan_fd)
++	{
++		uint32_t bitrateFD;
++		if (mcux_flexcan_calculate_bitrate(clock_freq, timing->fpreDivider+1U, timing->fpropSeg, timing->fphaseSeg1+1U, timing->fphaseSeg2+1U, &bitrateFD) != 0)
++			return;
++
++		FLEXCAN_FDCalculateImprovedTimingValues(config->base, bitrate, bitrateFD, clock_freq, timing);
++	}
++	else
++#endif
++	{
++		FLEXCAN_CalculateImprovedTimingValues(config->base, bitrate, clock_freq, timing);
++	}
++}
++#endif /* CONFIG_CAN_MCUX_FLEXCAN_IMPROVE_TIMING_VALUES */
++
+ static int mcux_flexcan_start(const struct device *dev)
+ {
+ 	const struct mcux_flexcan_config *config = dev->config;
+@@ -287,23 +331,33 @@ static int mcux_flexcan_start(const struct device *dev)
+ 
+ 		k_mutex_unlock(&data->rx_mutex);
+ 	}
++
++	if (config->flexcan_fd) {
++		timing.fpreDivider = data->timing_data.prescaler - 1U;
++		timing.frJumpwidth = data->timing_data.sjw - 1U;
++		timing.fphaseSeg1 = data->timing_data.phase_seg1 - 1U;
++		timing.fphaseSeg2 = data->timing_data.phase_seg2 - 1U;
++		timing.fpropSeg = data->timing_data.prop_seg;
++	}
+ #endif /* CONFIG_CAN_MCUX_FLEXCAN_FD */
+ 
+-	/* Delay this until start since setting the timing automatically exits freeze mode */
+ 	timing.preDivider = data->timing.prescaler - 1U;
+ 	timing.rJumpwidth = data->timing.sjw - 1U;
+ 	timing.phaseSeg1 = data->timing.phase_seg1 - 1U;
+ 	timing.phaseSeg2 = data->timing.phase_seg2 - 1U;
+ 	timing.propSeg = data->timing.prop_seg - 1U;
++
++	/* Improve timing values */
++#ifdef CONFIG_CAN_MCUX_FLEXCAN_IMPROVE_TIMING_VALUES
++	mcux_flexcan_improve_timing(dev, &timing);
++#endif
++
++	/* Delay this until start since setting the timing automatically exits freeze mode */
+ 	FLEXCAN_SetTimingConfig(config->base, &timing);
+ 
+ #ifdef CONFIG_CAN_MCUX_FLEXCAN_FD
+ 	if (config->flexcan_fd) {
+-		timing.fpreDivider = data->timing_data.prescaler - 1U;
+-		timing.frJumpwidth = data->timing_data.sjw - 1U;
+-		timing.fphaseSeg1 = data->timing_data.phase_seg1 - 1U;
+-		timing.fphaseSeg2 = data->timing_data.phase_seg2 - 1U;
+-		timing.fpropSeg = data->timing_data.prop_seg;
++
+ 		FLEXCAN_SetFDTimingConfig(config->base, &timing);
+ 
+ 		FLEXCAN_EnterFreezeMode(config->base);
