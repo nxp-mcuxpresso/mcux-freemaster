@@ -40,10 +40,14 @@ static void _FMSTR_RxDone(void);
 static void _FMSTR_SendError(FMSTR_BCHR nErrCode);
 static FMSTR_BOOL _FMSTR_TxCan(void);
 static FMSTR_BOOL _FMSTR_RxCan(FMSTR_SIZE8 rxLen);
+static FMSTR_SIZE8 _FMSTR_GetMaxCANFrameLen(FMSTR_SIZE8 nLength);
 
 /******************************************************************************
  * Local variables
  ******************************************************************************/
+
+/* CAN driver capabilities */
+static FMSTR_CAN_IF_CAPS fmstr_canCaps;
 
 /* FreeMASTER communication buffer (in/out) plus the STS, LEN and CRC bytes */
 static FMSTR_BCHR fmstr_pCommBuffer[FMSTR_COMM_BUFFER_SIZE + 3 + 1];
@@ -143,6 +147,21 @@ static FMSTR_BOOL _FMSTR_InitCan(void)
     {
         return FMSTR_FALSE;
     }
+
+    /* get driver capabilities */
+    FMSTR_MemSet(&fmstr_canCaps, 0, sizeof(fmstr_canCaps));
+    if (FMSTR_CAN_DRV.GetCaps != NULL)
+    {
+        FMSTR_CAN_DRV.GetCaps(&fmstr_canCaps);
+    }
+
+    /* check driver's CAN FD capabilities */
+#if (defined(FMSTR_CAN_USE_CANFD) && FMSTR_CAN_USE_CANFD != 0)
+    if ((fmstr_canCaps.flags & FMSTR_CAN_IF_CAPS_FLAG_FD) == 0U)
+    {
+        return FMSTR_FALSE;
+    }
+#endif
 
     /* initialize all state variables */
     fmstr_wFlags.all = 0U;
@@ -335,23 +354,29 @@ static void _FMSTR_SendResponse(FMSTR_BPTR pResponse, FMSTR_SIZE nLength, FMSTR_
 static FMSTR_BOOL _FMSTR_TxCan(void)
 {
     FMSTR_U8 ch;
-    FMSTR_SIZE8 i, len = fmstr_nTxTodo;
+    FMSTR_SIZE8 i, len = fmstr_nTxTodo, maxLen;
 
     if (fmstr_wFlags.flg.bTxActive == 0U || fmstr_nTxTodo == 0U)
     {
         return FMSTR_FALSE;
     }
 
-    if (len > 7U)
+   /* Get max possible single-frame length (ctl byte and payload) */
+    maxLen = _FMSTR_GetMaxCANFrameLen(len+1);
+    /* Do not count the ctl byte now, it will be added later */
+    maxLen--;
+
+    /* Transmit as much as we can in this single frame */
+    if (len > maxLen)
     {
-        len = 7U;
+        len = maxLen;
     }
 
     /* First byte is the control byte */
     if (fmstr_wFlags.flg.bTxFirst != 0U)
     {
-        /* The first frame and the length*/
-        fmstr_uTxCtlByte = (FMSTR_U8)(FMSTR_CANCTL_FST | len);
+        /* The first frame */
+        fmstr_uTxCtlByte = (FMSTR_U8)(FMSTR_CANCTL_FST);
         fmstr_wFlags.flg.bTxFirst = 0U;
     }
     else
@@ -361,6 +386,12 @@ static FMSTR_BOOL _FMSTR_TxCan(void)
         /* coverity[cert_int31_c_violation:FALSE] */
         fmstr_uTxCtlByte &= (FMSTR_U8) ~(FMSTR_CANCTL_FST | FMSTR_CANCTL_LEN_MASK);
         fmstr_uTxCtlByte ^= FMSTR_CANCTL_TGL;
+    }
+
+    /* For CAN-FD lengths >7 leave the LEN bits in the control byte zero to
+       indicate that the real length shall be obtained from physical DLC value */
+    if (len <= 7)
+    {
         fmstr_uTxCtlByte |= (FMSTR_U8)len;
     }
 
@@ -478,8 +509,15 @@ static FMSTR_BOOL _FMSTR_RxCan(FMSTR_SIZE8 rxLen)
     /* frame is valid, get the data */
     len = (FMSTR_SIZE8)(ctl & FMSTR_CANCTL_LEN_MASK);
 
+    /* zero length means to get it from the physiscal layer */
+    if(len == 0 && rxLen > 0)
+    {
+        /* note: the rxLen may be up to 64 for CAN-FD. */
+        len = rxLen - 1;
+    }
+
     /* sanity check of the real received frame length */
-    if (len >= rxLen)
+    if (len == 0 || len >= rxLen)
     {
         /* invalid frame length, re-start receiving */
         fmstr_nRxErr = FMSTR_STC_CANMSGERR;
@@ -707,6 +745,44 @@ void FMSTR_ProcessCanTx(void)
 #endif
         }
     }
+}
+
+/*
+ * Get maximum data length for CAN frame
+ *
+ * @param nLength - data length to send
+ *
+ * @return maximum data lenght for CAN frame
+ *
+*/
+
+static FMSTR_SIZE8 _FMSTR_GetMaxCANFrameLen(FMSTR_SIZE8 nLength)
+{
+    /* normal CAN length as default */
+    FMSTR_SIZE8 lenMax = 8;
+
+#if defined(FMSTR_CAN_USE_CANFD) && FMSTR_CAN_USE_CANFD !=0
+    static const FMSTR_SIZE8 lengths[] = { 64, 48, 32, 24, 20, 16, 12, 8, 0 };
+
+    /* is flexible data rate supported */
+    if ((fmstr_canCaps.flags & FMSTR_CAN_IF_CAPS_FLAG_FD) != 0U)
+    {
+        /* seek a beter maximum if it makes any sense */
+        if (nLength >= 12)
+        {
+            for (int i = 0; lengths[i] != 0; i++)
+            {
+                if (nLength >= lengths[i])
+                {
+                    lenMax = lengths[i];
+                    break;
+                }
+            }
+        }
+    }
+#endif
+
+    return lenMax;
 }
 
 #endif /* (FMSTR_MK_IDSTR(FMSTR_TRANSPORT) == FMSTR_CAN_ID) && FMSTR_DISABLE == 0 */

@@ -29,8 +29,8 @@
 #include "freemaster_cfg.h"
 
 /* Define global version macro */
-#define FMSTR_VERSION     0x00030007
-#define FMSTR_VERSION_STR "3.0.7"
+#define FMSTR_VERSION     0x00030010
+#define FMSTR_VERSION_STR "3.0.10"
 
 /******************************************************************************
  * Includes
@@ -369,5 +369,6 @@
 #define FMSTR_SERIAL_MCUX_UART_ID            413
 #define FMSTR_SERIAL_MCUX_USART_ID           414
 #define FMSTR_SERIAL_MCUX_USB_ID             415
+#define FMSTR_CAN_MCUX_FLEXCANFD_ID          416
 
 #endif /* __FREEMASTER_DEF_CFG_H */

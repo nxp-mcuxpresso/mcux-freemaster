@@ -39,6 +39,8 @@ if (CONFIG_MCUX_COMPONENT_middleware.fmstr.platform_gen32le)
         SOURCES
             ../src/platforms/gen32le/freemaster_gen32le.h
             ../src/drivers/mcuxsdk/can/freemaster_flexcan.c
+            ../src/drivers/mcuxsdk/can/freemaster_flexcanfd.h
+            ../src/drivers/mcuxsdk/can/freemaster_flexcanfd.c
             ../src/drivers/mcuxsdk/can/freemaster_flexcan.h
             ../src/drivers/mcuxsdk/can/freemaster_mscan.c
             ../src/drivers/mcuxsdk/can/freemaster_mscan.h

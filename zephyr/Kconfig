@@ -176,6 +176,14 @@ if USE_FREEMASTER
                     help
                         Command CAN message ID (from target to PC). May be the same as command ID.
             endif
+
+            config FMSTR_CANFD_USE_BRS
+                bool "Use CAN-FD bit rate switch"
+                depends on CAN_FD_MODE
+                default y
+                help
+                    Use CAN-FD dynamic Bit-rate switching (only if CAN device operates in FD mode).
+
         endmenu
     endif
 
