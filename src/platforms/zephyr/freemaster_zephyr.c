@@ -79,9 +79,16 @@ void FMSTR_PostEvents(uint32_t events)
 }
 
 /* Wait events */
-uint32_t FMSTR_WaitEvents(uint32_t events, bool reset, uint32_t timeout)
+uint32_t FMSTR_WaitEvents(uint32_t events, bool clear, uint32_t timeout)
 {
-    return k_event_wait(&fmstr_sync_event, events, reset, timeout == FMSTR_WAIT_FOREVER ? K_FOREVER : K_MSEC(timeout));
+    /* Always use false here not to clear events that are already set ... */
+    uint32_t ret = k_event_wait(&fmstr_sync_event, events, false, timeout == FMSTR_WAIT_FOREVER ? K_FOREVER : K_MSEC(timeout));
+
+    /* ... if user want it we clear afterwards */
+    if (clear)
+        k_event_clear(&fmstr_sync_event, events);
+
+    return ret;
 }
 
 /* Test events */
