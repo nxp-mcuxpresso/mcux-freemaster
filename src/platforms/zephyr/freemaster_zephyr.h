@@ -160,7 +160,7 @@ bool FMSTR_WaitInitialized(uint32_t timeout);
 
 /* Low-level event handling */
 void FMSTR_PostEvents(uint32_t events);
-uint32_t FMSTR_WaitEvents(uint32_t events, bool reset, uint32_t timeout);
+uint32_t FMSTR_WaitEvents(uint32_t events, bool clear, uint32_t timeout);
 bool FMSTR_TestEvents(uint32_t events);
 
 #ifdef __cplusplus
