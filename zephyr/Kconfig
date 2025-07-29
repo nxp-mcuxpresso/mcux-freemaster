@@ -29,7 +29,8 @@ if USE_FREEMASTER
 
         config FMSTR_THREAD_STACK_SIZE
             int "Thread stack size"
-            default 1024
+            default 4096 if FMSTR_NET_ZEPHYR_TCP || FMSTR_NET_ZEPHYR_UDP
+            default 2048
             help
                 Stack size for FreeMASTER working thread.
 
