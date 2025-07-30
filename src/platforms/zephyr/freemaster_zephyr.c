@@ -15,6 +15,7 @@
  * FreeMASTER Communication Driver - Zephyr-specific specific code
  */
 
+#include <zephyr/autoconf.h>
 #include <zephyr/kernel.h>
 #include <zephyr/version.h>
 #include <zephyr/logging/log.h>
@@ -26,6 +27,15 @@
 #include "freemaster_shell.h"
 
 #if FMSTR_DISABLE == 0
+
+/* The NXP license only allows use of FreeMASTER code with NXP MCUs */
+#if !( (defined(CONFIG_SOC_FAMILY_NXP_MCX) && CONFIG_SOC_FAMILY_NXP_MCX) || \
+       (defined(CONFIG_SOC_FAMILY_NXP_IMXRT) && CONFIG_SOC_FAMILY_NXP_IMXRT) || \
+       (defined(CONFIG_SOC_FAMILY_NXP_RW) && CONFIG_SOC_FAMILY_NXP_RW)  || \
+       (defined(CONFIG_SOC_FAMILY_NXP_S32) && CONFIG_SOC_FAMILY_NXP_S32) )
+#warning FreeMASTER has not been tested with Zephyr on this platform
+#error FreeMASTER license only enables using it with NXP platforms
+#endif
 
 LOG_MODULE_REGISTER(freemaster);
 
@@ -116,13 +126,13 @@ bool FMSTR_WaitInitialized(uint32_t timeout)
 }
 
 /* Fill Zephyr info structure */
-void FMSTR_FillZephyrInfo()
+static void FMSTR_FillZephyrInfo()
 {
     memcpy(&fmstr_zephyr_info.build_version, STRINGIFY(BUILD_VERSION), sizeof(STRINGIFY(BUILD_VERSION)));
 }
 
-/* Fill task info structure for the thread */
-void FMSTR_FillTaskInfo()
+/* Fill thread info structure for the thread */
+static void FMSTR_FillThreadInfo()
 {
     if (fmstr_thread_req.state == DATA_REQUEST)
     {
@@ -214,15 +224,15 @@ void FMSTR_Thread()
 
     while (1)
     {
-        /* Fill task info structure if requested */
-        FMSTR_FillTaskInfo();
+        /* Fill thread info structure if requested */
+        FMSTR_FillThreadInfo();
 
         /* The FreeMASTER poll handles the communication interface and protocol
         processing. The poll call will put this thread to sleep until some communication takes
         place and triggers the protocol processing depending on interrupt mode configured:
             - In Short Interrupt mode the Poll processes the protocol message received by ISR.
             - In Long Interrupt mode both communication and protocol decoding is fully handled by
-              ISR, so this loop will only process for regular housekeeping tasks like debug printing.
+              ISR, so this loop will only process for regular housekeeping operations like debug printing.
         */
         FMSTR_Poll();
     }
@@ -270,7 +280,7 @@ FMSTR_ADDR FMSTR_TsaGetUserTable(FMSTR_INDEX tableIndex, FMSTR_SIZE *tableSize)
     return addr;
 }
 
-/* Zephyr structures used by FreeMASTER UI to fetch task information */
+/* Zephyr structures used by FreeMASTER UI to fetch thread information */
 
 FMSTR_TSA_AUTO_TABLE_BEGIN(fmstr_zephyr_table)
     FMSTR_TSA_STRUCT(fmstr_zephyr_info_t)

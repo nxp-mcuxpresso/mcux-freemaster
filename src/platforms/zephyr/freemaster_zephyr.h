@@ -28,18 +28,11 @@
  * platform-specific default configuration
  ******************************************************************************/
 
-/* Zephyr autoconf-derived values */
-#if !(defined(CONFIG_SOC_FAMILY_NXP_MCX) && CONFIG_SOC_FAMILY_NXP_MCX) && \
-    !(defined(CONFIG_SOC_FAMILY_NXP_IMXRT) && CONFIG_SOC_FAMILY_NXP_IMXRT) && \
-    !(defined(CONFIG_SOC_FAMILY_NXP_RW) && CONFIG_SOC_FAMILY_NXP_RW)
-#warning FreeMASTER has not been tested with Zephyr on this platform
-#error FreeMASTER license only enables using it with NXP platforms
-#endif
-
+/* Zephyr autoconf-derived values used to configure FreeMASTER platform */
 #ifdef CONFIG_LITTLE_ENDIAN
 #define FMSTR_PLATFORM_BIG_ENDIAN (!(CONFIG_LITTLE_ENDIAN))
 #else
-#error CONFIG_LITTLE_ENDIAN is missing in autoconf.h, assuming little-endian
+#warning CONFIG_LITTLE_ENDIAN is missing in autoconf.h, assuming little-endian
 #define FMSTR_PLATFORM_BIG_ENDIAN 0U
 #endif
 
