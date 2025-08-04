@@ -51,6 +51,16 @@
 #error FreeMASTER requires more sessions than zsock_poll capacity. Update CONFIG_ZVFS_POLL_MAX to match.
 #endif
 
+/* Needed network connections */
+#if (FMSTR_TCP_SESSION_COUNT+2) > CONFIG_NET_MAX_CONN
+#warning FreeMASTER requires more network connections than configured in system. Update CONFIG_NET_MAX_CONN to match.
+#endif
+
+/* Needed network contexts to allocate */
+#if (FMSTR_TCP_SESSION_COUNT+2) > CONFIG_NET_MAX_CONTEXTS
+#warning FreeMASTER requires more network contexts to allocate. Update CONFIG_NET_MAX_CONTEXTS to match.
+#endif
+
 /******************************************************************************
  * Local types
  ******************************************************************************/
