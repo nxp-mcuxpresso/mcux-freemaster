@@ -31,6 +31,16 @@
 #error The FreeMASTER network UDP driver does not support interrupt mode.
 #endif
 
+/* Needed network connections */
+#if CONFIG_NET_MAX_CONN < 2
+#warning FreeMASTER requires at least 2 network connections. Update CONFIG_NET_MAX_CONN to match.
+#endif
+
+/* Needed network contexts to allocate */
+#if CONFIG_NET_MAX_CONN < 2
+#warning FreeMASTER requires at least 2 network contexts to allocate. Update CONFIG_NET_MAX_CONTEXTS to match.
+#endif
+
 /******************************************************************************
  * Local functions
  ******************************************************************************/
