@@ -2,7 +2,7 @@ NXP Software Content Register
 
 Repository:                 mcux-freemaster.git
 
-Version:                    v25.06.00 (internally 3.0.10)
+Version:                    v25.09.00-pvw2 (internally 3.0.11)
 Outgoing License:           NXP LA_OPT_Online Code Hosting NXP_Software_License
 License File:               LICENSE.txt
 Description and comments:   FreeMASTER Communication Driver

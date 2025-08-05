@@ -70,5 +70,6 @@
   - 3.0.11
     - Fixed RTT default buffer size issue
     - Enforcing assert checks when FMSTR_DEBUG_LEVEL is >0
+    - Fixed KConfig default values for Zephyr RTOS
 
 */
