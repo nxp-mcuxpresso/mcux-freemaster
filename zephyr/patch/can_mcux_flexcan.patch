@@ -1,5 +1,5 @@
 diff --git a/drivers/can/Kconfig.mcux b/drivers/can/Kconfig.mcux
-index e2ee5a8d27d..976a26462a5 100644
+index e2ee5a8d27d..fd89cf87694 100644
 --- a/drivers/can/Kconfig.mcux
 +++ b/drivers/can/Kconfig.mcux
 @@ -28,6 +28,12 @@ config CAN_MCUX_FLEXCAN_WAIT_TIMEOUT
@@ -16,10 +16,10 @@ index e2ee5a8d27d..976a26462a5 100644
  	int "Maximum number of message buffers for concurrent active instances"
  	default 16
 diff --git a/drivers/can/can_mcux_flexcan.c b/drivers/can/can_mcux_flexcan.c
-index e7bafb5e566..0876d51a753 100644
+index e3a8caac989..e9f3c9fc3b2 100644
 --- a/drivers/can/can_mcux_flexcan.c
 +++ b/drivers/can/can_mcux_flexcan.c
-@@ -242,6 +242,50 @@ static void mcux_flexcan_mb_stop(const struct device *dev, int alloc)
+@@ -256,6 +256,51 @@ static void mcux_flexcan_mb_stop(const struct device *dev, int alloc)
  #endif /* CONFIG_CAN_MCUX_FLEXCAN_FD */
  }
  
@@ -41,7 +41,7 @@ index e7bafb5e566..0876d51a753 100644
 +{
 +	uint32_t bitrate = 0;
 +	uint32_t clock_freq = 0;
-+	const struct mcux_flexcan_config *config = dev->config;
++	CAN_Type *base = get_base(dev);
 +
 +	if (mcux_flexcan_get_core_clock(dev, &clock_freq) != 0)
 +		return;
@@ -51,18 +51,19 @@ index e7bafb5e566..0876d51a753 100644
 +
 +	/* Let driver calculate improved timing values */
 +#ifdef CONFIG_CAN_MCUX_FLEXCAN_FD
++	const struct mcux_flexcan_config *config = dev->config;
 +	if (config->flexcan_fd)
 +	{
 +		uint32_t bitrateFD;
 +		if (mcux_flexcan_calculate_bitrate(clock_freq, timing->fpreDivider+1U, timing->fpropSeg, timing->fphaseSeg1+1U, timing->fphaseSeg2+1U, &bitrateFD) != 0)
 +			return;
 +
-+		FLEXCAN_FDCalculateImprovedTimingValues(config->base, bitrate, bitrateFD, clock_freq, timing);
++		FLEXCAN_FDCalculateImprovedTimingValues(base, bitrate, bitrateFD, clock_freq, timing);
 +	}
 +	else
 +#endif
 +	{
-+		FLEXCAN_CalculateImprovedTimingValues(config->base, bitrate, clock_freq, timing);
++		FLEXCAN_CalculateImprovedTimingValues(base, bitrate, clock_freq, timing);
 +	}
 +}
 +#endif /* CONFIG_CAN_MCUX_FLEXCAN_IMPROVE_TIMING_VALUES */
@@ -70,7 +71,7 @@ index e7bafb5e566..0876d51a753 100644
  static int mcux_flexcan_start(const struct device *dev)
  {
  	const struct mcux_flexcan_config *config = dev->config;
-@@ -287,23 +331,33 @@ static int mcux_flexcan_start(const struct device *dev)
+@@ -302,23 +347,33 @@ static int mcux_flexcan_start(const struct device *dev)
  
  		k_mutex_unlock(&data->rx_mutex);
  	}
@@ -97,7 +98,7 @@ index e7bafb5e566..0876d51a753 100644
 +#endif
 +
 +	/* Delay this until start since setting the timing automatically exits freeze mode */
- 	FLEXCAN_SetTimingConfig(config->base, &timing);
+ 	FLEXCAN_SetTimingConfig(base, &timing);
  
  #ifdef CONFIG_CAN_MCUX_FLEXCAN_FD
  	if (config->flexcan_fd) {
@@ -107,6 +108,6 @@ index e7bafb5e566..0876d51a753 100644
 -		timing.fphaseSeg2 = data->timing_data.phase_seg2 - 1U;
 -		timing.fpropSeg = data->timing_data.prop_seg;
 +
- 		FLEXCAN_SetFDTimingConfig(config->base, &timing);
+ 		FLEXCAN_SetFDTimingConfig(base, &timing);
  
- 		FLEXCAN_EnterFreezeMode(config->base);
+ 		FLEXCAN_EnterFreezeMode(base);
