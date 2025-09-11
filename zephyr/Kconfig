@@ -157,7 +157,7 @@ if USE_FREEMASTER
 
     ### CAN configuration
 
-    if FMSTR_CAN_ZEPHYR_GENERIC
+    if FMSTR_CAN_ZEPHYR_GENERIC && FMSTR_SHORT_INTR
         menu "CAN interface configuration"
 
             config FMSTR_CAN_OVERRIDE_CANIDS

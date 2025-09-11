@@ -32,7 +32,9 @@
 #if !( (defined(CONFIG_SOC_FAMILY_NXP_MCX) && CONFIG_SOC_FAMILY_NXP_MCX) || \
        (defined(CONFIG_SOC_FAMILY_NXP_IMXRT) && CONFIG_SOC_FAMILY_NXP_IMXRT) || \
        (defined(CONFIG_SOC_FAMILY_NXP_RW) && CONFIG_SOC_FAMILY_NXP_RW)  || \
-       (defined(CONFIG_SOC_FAMILY_NXP_S32) && CONFIG_SOC_FAMILY_NXP_S32) )
+       (defined(CONFIG_SOC_FAMILY_NXP_S32) && CONFIG_SOC_FAMILY_NXP_S32) || \
+       (defined(CONFIG_SOC_FAMILY_LPC) && CONFIG_SOC_FAMILY_LPC) \
+       )
 #warning FreeMASTER has not been tested with Zephyr on this platform
 #error FreeMASTER license only enables using it with NXP platforms
 #endif

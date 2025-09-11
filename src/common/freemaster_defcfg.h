@@ -29,8 +29,8 @@
 #include "freemaster_cfg.h"
 
 /* Define global version macro */
-#define FMSTR_VERSION     0x00030011
-#define FMSTR_VERSION_STR "3.0.11"
+#define FMSTR_VERSION     0x00030012
+#define FMSTR_VERSION_STR "3.0.12"
 
 /******************************************************************************
  * Includes
