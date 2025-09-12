@@ -113,29 +113,29 @@ if USE_FREEMASTER
     #############################################################################
     ### Communication mode
 
-    choice
-        prompt "Communication interrupt mode"
-        default FMSTR_SHORT_INTR if FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB || FMSTR_CAN_ZEPHYR_GENERIC
-        default FMSTR_POLL_DRIVEN
+    menu "Communication interrupt mode"
+        visible if VISIBLE_INTERRUPT_MODE_SELECTION
 
         config FMSTR_LONG_INTR
             bool "Long ISR - communication and protocol processing in interrupt"
+            default n
             help
                 Complete message processing in communication device interrupt routine.
                 The worker thread is only needed for debugging services.
 
         config FMSTR_SHORT_INTR
             bool "Short ISR - data buffering in interrupt, protocol processing polled in thread"
+            default y if FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB || FMSTR_CAN_ZEPHYR_GENERIC
             help
                 Data queuing done in communication device interrupt routine, protocol
                 is decoded by a worker thread.
 
         config FMSTR_POLL_DRIVEN
             bool "Poll - both communication and protocol processing polled in thread"
+            default y if !FMSTR_SHORT_INTR
             help
                 No device interrupt is used, communication is polled by a worker thread.
-    endchoice
-
+    endmenu
 
     #############################################################################
     ### Comm interface-specific settings
@@ -157,7 +157,7 @@ if USE_FREEMASTER
 
     ### CAN configuration
 
-    if FMSTR_CAN_ZEPHYR_GENERIC && FMSTR_SHORT_INTR
+    if FMSTR_CAN_ZEPHYR_GENERIC
         menu "CAN interface configuration"
 
             config FMSTR_CAN_OVERRIDE_CANIDS

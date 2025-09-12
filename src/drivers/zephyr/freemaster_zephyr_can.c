@@ -30,12 +30,8 @@
 
 #if FMSTR_DISABLE == 0
 
-#if defined(FMSTR_POLL_DRIVEN) && FMSTR_POLL_DRIVEN != 0
-#error The Zephyr driver does not support poll driven mode.
-#endif
-
-#if defined(FMSTR_LONG_INTR) && FMSTR_LONG_INTR != 0
-#error The Zephyr driver does not support long interrupt mode.
+#if !defined(FMSTR_SHORT_INTR) || FMSTR_SHORT_INTR == 0
+#error Zephyr CAN driver requires FMSTR_SHORT_INTR interrupt mode.
 #endif
 
 #if (!defined CONFIG_CAN) || CONFIG_CAN == 0
