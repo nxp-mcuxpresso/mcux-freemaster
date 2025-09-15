@@ -30,8 +30,8 @@
 
 #if FMSTR_DISABLE == 0
 
-#if defined(FMSTR_POLL_DRIVEN) && FMSTR_POLL_DRIVEN != 0
-#error The Zephyr driver does not support poll driven mode.
+#if !defined(FMSTR_SHORT_INTR) || FMSTR_SHORT_INTR == 0
+#error Zephyr CAN driver requires FMSTR_SHORT_INTR interrupt mode.
 #endif
 
 #if (!defined CONFIG_CAN) || CONFIG_CAN == 0
@@ -93,6 +93,16 @@ static void _FMSTR_CanZephyrGetCaps(FMSTR_CAN_IF_CAPS *caps);        /* Get driv
 /* IRQ callbacks */
 static void _FMSTR_CanZephyrRxCallback(const struct device *dev, struct can_frame *frame, void *user_data); /* CAN Rx data callback */
 static void _FMSTR_CanZephyrTxCallback(const struct device *dev, int error, void *user_data); /* CAN Tx data callback */
+
+/* Handlers */
+static void _FMSTR_CanZephyrTxHandler(struct k_work *work);         /* Handle CAN Tx data sent event */
+
+/******************************************************************************
+ * Initialization defines
+ ******************************************************************************/
+
+ /* Handler for Tx message sent event */
+static K_WORK_DEFINE(fmstr_txdone, _FMSTR_CanZephyrTxHandler);
 
 /******************************************************************************
  * Global API functions
@@ -303,17 +313,9 @@ static void _FMSTR_CanZephyrSendTxFrame(FMSTR_SIZE8 len)
 
 static void _FMSTR_CanZephyrPoll(void)
 {
-#if FMSTR_LONG_INTR > 0
-    /* Put calling thread to sleep for 10ms.
-       Cannot sleep forever, the debug transmission can follow in upper layer. */
-    k_sleep(K_MSEC(10));
-#endif
-
-#if FMSTR_SHORT_INTR > 0
     /* Wait (10ms) for new data to be processed.
        Cannot sleep forever, the debug transmission can follow in upper layer. */
     FMSTR_WaitEvents(FMSTR_EVENT_DATA_AVAILABLE, true, 10);
-#endif
 }
 
 /******************************************************************************
@@ -343,15 +345,11 @@ static void _FMSTR_CanZephyrRxCallback(const struct device *dev, struct can_fram
 {
     fmstr_rxmsg = *frame;
 
-#if FMSTR_LONG_INTR > 0 || FMSTR_SHORT_INTR > 0
     /* Process received frame */
     FMSTR_ProcessCanRx();
-#endif
 
-#if FMSTR_SHORT_INTR > 0
     /* Notify thread processing data*/
     FMSTR_PostEvents(FMSTR_EVENT_DATA_AVAILABLE);
-#endif
 }
 
 /******************************************************************************
@@ -364,6 +362,18 @@ static void _FMSTR_CanZephyrTxCallback(const struct device *dev, int error, void
 {
     fmstr_txmsg.dlc = 0U;
 
+    /* Submit "Tx data sent event" handler to the system work queue to call it as soon as possible. */
+    /* Handler cannot be called directly here as we are in interrupt and handler can send another data. */
+    if (k_work_submit(&fmstr_txdone) != 1)
+    {
+        /* Abort sending and switch to listen mode */
+        FMSTR_AbortCanTx();
+    }
+}
+
+static void _FMSTR_CanZephyrTxHandler(struct k_work *work)
+{
+    /* Send next frames if available */
     FMSTR_ProcessCanTx();
 }
 
