@@ -30,11 +30,17 @@
 
 /* The NXP license only allows use of FreeMASTER code with NXP MCUs */
 #if !( (defined(CONFIG_SOC_FAMILY_NXP_MCX) && CONFIG_SOC_FAMILY_NXP_MCX) || \
+       (defined(CONFIG_SOC_FAMILY_MCXA) && CONFIG_SOC_FAMILY_MCXA) || \
+       (defined(CONFIG_SOC_FAMILY_MCXC) && CONFIG_SOC_FAMILY_MCXC) || \
+       (defined(CONFIG_SOC_FAMILY_MCXN) && CONFIG_SOC_FAMILY_MCXN) || \
+       (defined(CONFIG_SOC_FAMILY_MCXW) && CONFIG_SOC_FAMILY_MCXW) || \
+       (defined(CONFIG_SOC_FAMILY_NXP_IMX) && CONFIG_SOC_FAMILY_NXP_IMX) || \
        (defined(CONFIG_SOC_FAMILY_NXP_IMXRT) && CONFIG_SOC_FAMILY_NXP_IMXRT) || \
        (defined(CONFIG_SOC_FAMILY_NXP_RW) && CONFIG_SOC_FAMILY_NXP_RW)  || \
        (defined(CONFIG_SOC_FAMILY_NXP_S32) && CONFIG_SOC_FAMILY_NXP_S32) || \
-       (defined(CONFIG_SOC_FAMILY_LPC) && CONFIG_SOC_FAMILY_LPC) \
-       )
+       (defined(CONFIG_SOC_FAMILY_LPC) && CONFIG_SOC_FAMILY_LPC) || \
+       (defined(CONFIG_SOC_FAMILY_KINETIS) && CONFIG_SOC_FAMILY_KINETIS) \
+    )
 #warning FreeMASTER has not been tested with Zephyr on this platform
 #error FreeMASTER license only enables using it with NXP platforms
 #endif
@@ -43,6 +49,12 @@ LOG_MODULE_REGISTER(freemaster);
 
 #if !defined(CONFIG_EVENTS) || !CONFIG_EVENTS
 #error FreeMASTER Zephyr driver requires CONFIG_EVENTS feature enabled in Kconfig.
+#endif
+
+#if defined CONFIG_THREAD_MAX_NAME_LEN
+#define FMSTR_THREAD_MAX_NAME_LEN CONFIG_THREAD_MAX_NAME_LEN
+#else
+#define FMSTR_THREAD_MAX_NAME_LEN 32
 #endif
 
 typedef struct
@@ -68,7 +80,7 @@ typedef struct
     uint32_t stack_size;
     uint32_t stack_unused;
     uint64_t sched_usage;
-    char name[CONFIG_THREAD_MAX_NAME_LEN];
+    char name[FMSTR_THREAD_MAX_NAME_LEN];
 } fmstr_thread_info_t;
 
 typedef struct
@@ -143,12 +155,14 @@ static void FMSTR_FillThreadInfo()
         /* Clear info */
         memset(&fmstr_thread_info, 0, sizeof(fmstr_thread_info));
 
+#ifdef CONFIG_THREAD_MONITOR
         /* If thread is not specified use the first */
         if (fmstr_thread_req.pthread == NULL)
         {
             fmstr_thread_info.pthread = _kernel.threads;
         }
         else
+#endif
         {
             fmstr_thread_info.pthread = fmstr_thread_req.pthread;
         }

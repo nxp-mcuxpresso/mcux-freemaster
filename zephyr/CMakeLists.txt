@@ -38,7 +38,7 @@ zephyr_include_directories(
         ../src/drivers/zephyr
 )
 
-if (CONFIG_FMSTR_SERIAL_ZEPHYR_UART OR CONFIG_FMSTR_SERIAL_ZEPHYR_USB)
+if (CONFIG_FMSTR_SERIAL_ZEPHYR_UART OR CONFIG_FMSTR_SERIAL_ZEPHYR_USB OR CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT)
     zephyr_library_sources(
         ../src/drivers/zephyr/freemaster_zephyr_serial.h
         ../src/drivers/zephyr/freemaster_zephyr_serial.c

@@ -44,17 +44,23 @@
 #endif
 
 #if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB != 0
-
-#if !defined(CONFIG_USB_DEVICE_STACK) || CONFIG_USB_DEVICE_STACK == 0
+#if (!defined(CONFIG_USB_DEVICE_STACK) || CONFIG_USB_DEVICE_STACK == 0)
 #error FreeMASTER Zephyr USB driver requires CONFIG_USB_DEVICE_STACK feature enabled in Kconfig.
 #endif
-
 #endif
+
+#if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT != 0
+#if (!defined(CONFIG_USB_DEVICE_STACK_NEXT) || CONFIG_USB_DEVICE_STACK_NEXT == 0)
+#error FreeMASTER Zephyr USB driver requires CONFIG_USB_DEVICE_STACK_NEXT feature enabled in Kconfig.
+#endif
+#endif
+
 
 /******************************************************************************
  * Adapter configuration
  ******************************************************************************/
 
+ /* USB stack */
 #if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB != 0
 
 /* Get USB peripheral to use. User defines chosen freemaster,usb or alias in DTS/overlay. */
@@ -71,7 +77,23 @@
 #error FreeMASTER USB can only talk to NXP devices identified with CONFIG_USB_DEVICE_VID=0x1FC9
 #endif
 
+#endif /* CONFIG_FMSTR_SERIAL_ZEPHYR_USB */
+
+/* USB stack NEXT */
+#if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT != 0
+
+/* Get USB peripheral to use. User defines chosen freemaster,usb or alias in DTS/overlay. */
+#if DT_NODE_EXISTS(DT_CHOSEN(freemaster_usb))
+#define DEV_FREEMASTER_SERIAL DEVICE_DT_GET(DT_CHOSEN(freemaster_usb))
+#elif DT_NODE_EXISTS(DT_ALIAS(freemaster_usb))
+#define DEV_FREEMASTER_SERIAL DEVICE_DT_GET(DT_ALIAS(freemaster_usb))
 #else
+#define DEV_FREEMASTER_SERIAL DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart)
+#endif
+
+#endif /* CONFIG_FMSTR_SERIAL_ZEPHYR_USB_NEXT */
+
+#if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_UART) && CONFIG_FMSTR_SERIAL_ZEPHYR_UART != 0
 
 /* Get UART peripheral to use. User defines chosen freemaster,uart or alias in DTS/overlay. */
 #if DT_NODE_EXISTS(DT_CHOSEN(freemaster_uart))
@@ -88,7 +110,7 @@
 #endif
 #endif
 
-#endif
+#endif /* CONFIG_FMSTR_SERIAL_ZEPHYR_UART */
 
 /***********************************
  *  Local variables
@@ -188,8 +210,9 @@ static FMSTR_BOOL _FMSTR_SerialZephyrInit(void)
         /* Check serial device state */
         while(!device_is_ready(fmstr_serialDev));
 
-#if defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB != 0
-        /* Enable the USB subsystem */
+#if (defined(CONFIG_FMSTR_SERIAL_ZEPHYR_USB) && CONFIG_FMSTR_SERIAL_ZEPHYR_USB != 0) \
+        /* Enable USB, this step was only required in legacy USB stack,
+        not needed in the latest Zephyr (4.2 and later) */
         int err = usb_enable(NULL);
         if (err < 0 && err != -EALREADY)
             ok = FMSTR_FALSE;

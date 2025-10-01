@@ -60,14 +60,24 @@ if USE_FREEMASTER
                 port is used.
 
         config FMSTR_SERIAL_ZEPHYR_USB
-            bool "Zephyr USB device stack using 'freemaster,usb' device"
+            bool "Old Zephyr USB device stack (v4.2 and earlier) using 'freemaster,usb' device"
             select SERIAL
             select UART_INTERRUPT_DRIVEN
             select USB_DEVICE_STACK
             help
-                Use Zephyr USB device stack to implement virtual serial port. The USB CDC ACM device
+                Use deprecated Zephyr (version <= 4.2) USB device stack to implement virtual serial port. The USB CDC ACM device
                 needs to be chosen or aliased in DTS overlay as "freemaster,usb". If not defined in
                 DTS, a default USB device port zephyr_udc0 is used.
+
+        config FMSTR_SERIAL_ZEPHYR_USB_NEXT
+            bool "New Zephyr USB device stack (v4.2 and later) using 'freemaster,usb' device"
+            select SERIAL
+            select UART_INTERRUPT_DRIVEN
+            select USB_DEVICE_STACK_NEXT
+            help
+                Use Zephyr (version => 4.2) USB device stack "NEXT" to implement virtual serial port. The USB CDC ACM device
+                needs to be chosen or aliased in DTS overlay as "freemaster,usb". If not defined in
+                DTS, a USB device port with zephyr_cdc_acm_uart compatibility is used.
 
         config FMSTR_CAN_ZEPHYR_GENERIC
             bool "Zephyr CAN driver using 'freemaster,can' device"
@@ -125,7 +135,7 @@ if USE_FREEMASTER
 
         config FMSTR_SHORT_INTR
             bool "Short ISR - data buffering in interrupt, protocol processing polled in thread"
-            default y if FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB || FMSTR_CAN_ZEPHYR_GENERIC
+            default y if FMSTR_SERIAL_ZEPHYR_UART || FMSTR_SERIAL_ZEPHYR_USB || FMSTR_SERIAL_ZEPHYR_USB_NEXT || FMSTR_CAN_ZEPHYR_GENERIC
             help
                 Data queuing done in communication device interrupt routine, protocol
                 is decoded by a worker thread.
