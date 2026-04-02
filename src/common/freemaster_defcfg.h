@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007-2015 Freescale Semiconductor, Inc.
- * Copyright 2018-2021, 2024-2025 NXP
+ * Copyright 2018-2021, 2024-2026 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -29,8 +29,8 @@
 #include "freemaster_cfg.h"
 
 /* Define global version macro */
-#define FMSTR_VERSION     0x00030012
-#define FMSTR_VERSION_STR "3.0.12"
+#define FMSTR_VERSION     0x00030013
+#define FMSTR_VERSION_STR "3.0.13"
 
 /******************************************************************************
  * Includes

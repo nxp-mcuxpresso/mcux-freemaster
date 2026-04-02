@@ -75,4 +75,7 @@
   - 3.0.12
     - Fixed callback handling in CAN driver for Zephyr RTOS
 
+  - 3.0.13
+    - Fixed dynamically adding of variables to the TSA table
+
 */
