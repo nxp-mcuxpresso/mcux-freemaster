@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007-2015 Freescale Semiconductor, Inc.
- * Copyright 2018-2020, 2024-2025 NXP
+ * Copyright 2018-2020, 2024-2026 NXP
  *
  * License: NXP LA_OPT_Online Code Hosting NXP_Software_License
  *
@@ -168,7 +168,7 @@ FMSTR_BOOL FMSTR_TsaAddVar(FMSTR_TSATBL_STRPTR tsaName,
         }
 
         /* add the entry to the last-used position */
-        if(found != FMSTR_FALSE)
+        if(found == FMSTR_FALSE)
         {
             pItem->name.p = FMSTR_TSATBL_STRPTR_CAST(tsaName);
             pItem->type.p = FMSTR_TSATBL_STRPTR_CAST(tsaType);
