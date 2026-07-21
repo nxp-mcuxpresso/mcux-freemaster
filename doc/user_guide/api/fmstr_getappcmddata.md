@@ -1,3 +1,4 @@
+(fmstr-getappcmd)=
 # FMSTR_GetAppCmdData
 
 ##### Prototype

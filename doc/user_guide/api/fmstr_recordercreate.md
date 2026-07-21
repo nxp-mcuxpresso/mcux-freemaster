@@ -1,3 +1,4 @@
+(configurable-items)=
 # FMSTR_RecorderCreate
 
 ##### Prototype
