@@ -1,3 +1,4 @@
+(fmstr-registerappcmdcall)=
 # FMSTR_RegisterAppCmdCall
 
 ##### Prototype

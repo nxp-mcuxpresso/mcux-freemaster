@@ -1,3 +1,4 @@
+(driver-interrupt-modes)=
 # Driver interrupt modes
 
 To implement the communication, the FreeMASTER driver handles the Serial or CAN module's receive and transmit requests. Use the *freemaster_cfg.h* configuration file to select whether the driver processes the communication automatically in the interrupt service routine handler or if it only polls the status of the module (typically during the application idle time).

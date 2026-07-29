@@ -1,3 +1,4 @@
+(fmstr-pipeopen)=
 # FMSTR_PipeOpen
 
 ##### Prototype

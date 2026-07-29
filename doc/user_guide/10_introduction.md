@@ -1,6 +1,6 @@
 # What is FreeMASTER?
 
-[FreeMASTER](https://www.nxp.com/freemaster) is a PC-based application developed by NXP for NXP customers. It is a versatile tool usable as a real-time monitor, visualization tool, and a graphical control panel of embedded applications based on the NXP processing units.
+[FreeMASTER](https://www.nxp.com/design/design-center/software/development-software/freemaster-run-time-debugging-tool:FREEMASTER?tid=vanFREEMASTER) is a PC-based application developed by NXP for NXP customers. It is a versatile tool usable as a real-time monitor, visualization tool, and a graphical control panel of embedded applications based on the NXP processing units.
 
 This document describes the embedded-side software driver which implements an interface between the application and the host PC. The interface covers the following communication:
  - **Serial** UART communication either over plain RS232 interface or more typically over a USB-to-Serial either external or built in a debugger probe.
