@@ -14,10 +14,21 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
         choice FMSTR_CHOICE_PLATFORM
             prompt "Platform"
             default MCUX_COMPONENT_middleware.fmstr.platform_gen32le
+            default MCUX_COMPONENT_middleware.fmstr.platform_56f800e
+            default MCUX_COMPONENT_middleware.fmstr.platform_s32
 
             # Enable FreeMASTER driver generic 32bit specific code
             config MCUX_COMPONENT_middleware.fmstr.platform_gen32le
                 bool "ARM 32bit little-endian"
+                depends on MCUX_HW_CORE_CM0P \
+                        || MCUX_HW_CORE_CM23 \
+                        || MCUX_HW_CORE_CM3 \
+                        || MCUX_HW_CORE_CM33 \
+                        || MCUX_HW_CORE_CM4 \
+                        || MCUX_HW_CORE_CM4F \
+                        || MCUX_HW_CORE_CM55 \
+                        || MCUX_HW_CORE_CM7F \
+                        || MCUX_HW_CORE_CM85
                 help
                     FreeMASTER driver code for generic 32bit platforms,
                     supports Serial, NET, CAN, USB and BDM/JTAG physical interface.
@@ -25,6 +36,8 @@ menuconfig MCUX_COMPONENT_middleware.fmstr
             # Enable FreeMASTER driver DSC specific code
             config MCUX_COMPONENT_middleware.fmstr.platform_56f800e
                 bool "DSC 56F800/E"
+                depends on MCUX_HW_CORE_DSP56800EX \
+                        || MCUX_HW_CORE_DSP56800EF
                 help
                     FreeMASTER driver code for DSC platforms,
                     supports Serial, CAN, USB and BDM/JTAG physical interface.
