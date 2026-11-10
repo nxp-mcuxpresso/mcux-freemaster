@@ -2,13 +2,13 @@
   "SPDXID": "SPDXRef-DOCUMENT",
   "spdxVersion": "SPDX-2.3",
   "creationInfo": {
-    "created": "2026-04-09T03:20:40Z",
+    "created": "2026-11-10T02:32:29Z",
     "creators": [
       "Organization: NXP"
     ],
-    "licenseListVersion": "3.26"
+    "licenseListVersion": "3.28"
   },
-  "name": "mcux-freemaster-v26.06.00",
+  "name": "mcux-freemaster-v26.12.00",
   "dataLicense": "CC0-1.0",
   "hasExtractedLicensingInfos": [
     {
@@ -22,12 +22,12 @@
       "extractedText": "Public domain code is not subject to any license."
     }
   ],
-  "documentNamespace": "https://nxp.com/spdx/d253ceaa-e31f-479d-bb12-0e4f197d4db1",
+  "documentNamespace": "https://nxp.com/spdx/88fe9c58-b984-4318-9f39-5de74533005d",
   "packages": [
     {
-      "SPDXID": "SPDXRef-package-d253ceaa-e31f-479d-bb12-0e4f197d4db1",
+      "SPDXID": "SPDXRef-package-88fe9c58-b984-4318-9f39-5de74533005d",
       "name": "mcux-freemaster",
-      "versionInfo": "v26.06.00",
+      "versionInfo": "v26.12.00",
       "licenseConcluded": "(LicenseRef-babf777f-042b-42df-a5bf-638993427038)",
       "licenseDeclared": "(LicenseRef-babf777f-042b-42df-a5bf-638993427038)",
       "downloadLocation": "https://github.com/nxp-mcuxpresso/mcux-freemaster",
@@ -37,7 +37,7 @@
       "filesAnalyzed": false
     },
     {
-      "SPDXID": "SPDXRef-package-d253ceaa-e31f-479d-bb12-0e4f197d4db1---f55bb1b4-c2eb-418f-bab0-af07409a85c2",
+      "SPDXID": "SPDXRef-package-f55bb1b4-c2eb-418f-bab0-af07409a85c2",
       "name": "crypto-algorithms",
       "versionInfo": "master-20140115",
       "licenseConcluded": "LicenseRef-d26bcb7d-5bc8-4f05-8942-a3a42728a2e4",
@@ -54,12 +54,12 @@
     {
       "spdxElementId": "SPDXRef-DOCUMENT",
       "relationshipType": "DESCRIBES",
-      "relatedSpdxElement": "SPDXRef-package-d253ceaa-e31f-479d-bb12-0e4f197d4db1"
+      "relatedSpdxElement": "SPDXRef-package-88fe9c58-b984-4318-9f39-5de74533005d"
     },
     {
-      "spdxElementId": "SPDXRef-package-d253ceaa-e31f-479d-bb12-0e4f197d4db1",
+      "spdxElementId": "SPDXRef-package-88fe9c58-b984-4318-9f39-5de74533005d",
       "relationshipType": "DYNAMIC_LINK",
-      "relatedSpdxElement": "SPDXRef-package-d253ceaa-e31f-479d-bb12-0e4f197d4db1---f55bb1b4-c2eb-418f-bab0-af07409a85c2"
+      "relatedSpdxElement": "SPDXRef-package-f55bb1b4-c2eb-418f-bab0-af07409a85c2"
     }
   ]
 }
